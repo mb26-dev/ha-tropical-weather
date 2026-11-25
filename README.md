@@ -77,8 +77,16 @@ Most weather cards are made for four seasons. In the tropics the questions are d
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mb26-dev&repository=ha-tropical-weather&category=plugin)
 
+1. Open **HACS** in Home Assistant, search for **Tropical Weather Card** and install it.
+2. Reload the browser.
+
+<details>
+<summary>Not showing up in HACS yet? Add it as a custom repository</summary>
+
 1. HACS → ⋮ → **Custom repositories** → add `https://github.com/mb26-dev/ha-tropical-weather`, type **Dashboard**.
 2. Install **Tropical Weather Card** and reload the browser.
+
+</details>
 
 ### Manual
 
