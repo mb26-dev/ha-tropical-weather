@@ -1,0 +1,34 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: plugin
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: dist is up to date with src
+        run: |
+          cp dist/tropical-weather-card.js /tmp/committed.js
+          python build.py
+          cmp dist/tropical-weather-card.js /tmp/committed.js
+      - name: syntax check
+        run: node --check dist/tropical-weather-card.js

@@ -1,10 +1,10 @@
 /*
- * Tropical Weather Card - working title, final name pending
- * v0.9.0 - prototype for the Thailand HA: icons, backgrounds, lightning, sea, pressure trend, cyclone, radar, week strip
- * One card instead of five: animated sky, source check,
- * rain outlook, tropical tiles, hourly / 8 days / tides.
+ * Tropical Weather Card for Home Assistant
+ * https://github.com/mb26-dev/ha-tropical-weather
+ * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
+ * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "0.9.0";
+const TWC_VERSION = "1.0.0";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -421,12 +421,13 @@ class TropicalWeatherCard extends HTMLElement {
     this._lastKey = "";
   }
 
-  static getStubConfig() {
-    return { weather: "weather.pirateweather" };
+  static getStubConfig(hass) {
+    const w = Object.keys((hass && hass.states) || {}).find((e) => e.startsWith("weather."));
+    return { weather: w || "weather.home" };
   }
 
   setConfig(config) {
-    if (!config.weather) throw new Error("weather: set a weather entity (e.g. weather.pirateweather)");
+    if (!config.weather) throw new Error("weather: set a weather entity (e.g. weather.home)");
     this._config = Object.assign({
       name: null,
       sources: [config.weather],
@@ -612,7 +613,8 @@ class TropicalWeatherCard extends HTMLElement {
     tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:paw"></ha-icon>${T("paws")}</span><b style="color:${pl[1]}">${Math.round(asNow)}°</b><span class="ts">${pawSub}</span></div>`);
 
     // 2) best time outside: dry, below the hot band, no thunder, 05-22 h local
-    const good = rows.slice(0, 20).filter((r) => { const lh = this._localHour(r.t); return lh >= 5 && lh <= 21 && r.pp < 30 && !r.storm && (r.app ?? 99) < hot; });
+    // from civil dawn (sun above -6 deg) until 22 h local
+    const good = rows.slice(0, 20).filter((r) => { const lh = this._localHour(r.t); return sunElevation(r.t, lat, lon) > -6 && lh <= 21 && lh >= 4 && r.pp < 30 && !r.storm && (r.app ?? 99) < hot; });
     const wins = [];
     for (const r of good) {
       const w = wins[wins.length - 1];
@@ -733,62 +735,6 @@ class TropicalWeatherCard extends HTMLElement {
   }
 
   // ---------- building blocks ----------
-  _sky(cond, sun, cloudCov) {
-    const night = !sun.up;
-    const rainy = ["rainy", "pouring", "lightning-rainy", "lightning"].includes(cond);
-    const heavy = ["pouring", "lightning-rainy", "lightning"].includes(cond);
-    const f = sun.frac;
-    let top, bot;
-    if (night) { top = "#070b1a"; bot = "#16213e"; }
-    else if (f < 0.08 || f > 0.92) { top = "#2b2a5c"; bot = "#e8875b"; }
-    else if (f < 0.18 || f > 0.82) { top = "#3a6ea5"; bot = "#f2b77a"; }
-    else { top = "#2f78c4"; bot = "#8cc4ee"; }
-    if (cloudCov > 70 || rainy) { top = night ? "#0b0f19" : (heavy ? "#2c3440" : "#46525f"); bot = night ? "#1b2230" : (heavy ? "#56616e" : "#7d8a97"); }
-
-    // sun / moon path
-    const W = 600, H = 220;
-    const x = 40 + f * (W - 80);
-    const y = 175 - Math.sin(f * Math.PI) * 135;
-    const body = night
-      ? `<circle cx="${x}" cy="${y}" r="13" fill="#f1ecd2" opacity=".9"/><circle cx="${x + 6}" cy="${y - 4}" r="11" fill="${top}" opacity=".9"/>`
-      : `<circle cx="${x}" cy="${y}" r="34" fill="url(#glow)"/><circle cx="${x}" cy="${y}" r="15" fill="#ffd54f" opacity="${cloudCov > 85 ? 0.55 : 1}"/>`;
-    const arc = `<path d="M40 175 Q ${W / 2} ${175 - 270} ${W - 40} 175" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.5" stroke-dasharray="3 6"/>`;
-
-    // stars at night
-    let stars = "";
-    if (night && cloudCov < 80) {
-      for (let i = 0; i < 40; i++) { const sx = (i * 137.5) % W, sy = (i * 71.3) % 150; stars += `<circle cx="${sx}" cy="${sy}" r="${(i % 3) * 0.4 + 0.5}" fill="#fff" opacity="${0.3 + (i % 5) * 0.12}" class="tw" style="animation-delay:${(i % 7) * 0.6}s"/>`; }
-    }
-
-    // clouds
-    const n = Math.round(clamp(cloudCov, 0, 100) / 14);
-    const cc = night ? "rgba(120,130,150," : (rainy ? "rgba(150,160,172," : "rgba(255,255,255,");
-    let clouds = "";
-    for (let i = 0; i < n; i++) {
-      const cy = 25 + (i * 37) % 110, sc = 0.7 + (i % 3) * 0.35, dur = 70 + (i % 4) * 25, delay = -((i * 23) % dur);
-      clouds += `<g class="cl" style="animation-duration:${dur}s;animation-delay:${delay}s"><g transform="translate(0 ${cy}) scale(${sc})"><ellipse cx="40" cy="20" rx="42" ry="15" fill="${cc}${0.55 + (i % 3) * 0.12})"/><ellipse cx="62" cy="10" rx="26" ry="16" fill="${cc}${0.55 + (i % 3) * 0.12})"/><ellipse cx="25" cy="12" rx="20" ry="12" fill="${cc}${0.5})"/></g></g>`;
-    }
-
-    // rain
-    let rain = "";
-    if (rainy) {
-      const drops = heavy ? 90 : 45;
-      for (let i = 0; i < drops; i++) {
-        const rx = (i * 53.7) % W, d = 0.55 + (i % 5) * 0.12, del = -((i * 0.137) % 1.2);
-        rain += `<line x1="${rx}" y1="-20" x2="${rx - 4}" y2="-6" class="rd" style="animation-duration:${d}s;animation-delay:${del}s"/>`;
-      }
-    }
-    const flash = cond.startsWith("lightning") ? `<rect width="${W}" height="${H}" class="fl"/>` : "";
-
-    return `<svg class="sky" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">
-      <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient>
-      <radialGradient id="glow"><stop offset="0" stop-color="rgba(255,214,79,.75)"/><stop offset="1" stop-color="rgba(255,214,79,0)"/></radialGradient></defs>
-      <rect width="${W}" height="${H}" fill="url(#bg)"/>${stars}${arc}${body}${clouds}<g stroke="rgba(160,210,255,.55)" stroke-width="1.3">${rain}</g>${flash}
-      <rect y="${H - 70}" width="${W}" height="70" fill="url(#fade)"/>
-      <defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(20,20,22,0)"/><stop offset="1" stop-color="rgba(20,20,22,.92)"/></linearGradient></defs>
-    </svg>`;
-  }
-
   _rainOutlook(hourly) {
     if (!hourly || !hourly.length) return { text: T("loading"), cls: "", icon: "cloudy" };
     const now = Date.now();
@@ -1156,14 +1102,6 @@ TropicalWeatherCard.styles = `
   .hero { position: relative; height: 244px; }
   .skyhost, .sky { position: absolute; inset: 0; width: 100%; height: 100%; }
   .skyhost { background-size: cover; background-position: center; background-repeat: no-repeat; }
-  .cl { animation: drift linear infinite; }
-  @keyframes drift { from { transform: translateX(-180px); } to { transform: translateX(640px); } }
-  .rd { animation: fall linear infinite; }
-  @keyframes fall { from { transform: translateY(0); } to { transform: translateY(250px); } }
-  .tw { animation: tw 3.5s ease-in-out infinite; }
-  @keyframes tw { 50% { opacity: .1; } }
-  .fl { fill: #fff; opacity: 0; animation: flash 7s infinite; }
-  @keyframes flash { 0%,88%,92%,100% { opacity: 0; } 89% { opacity: .55; } 90% { opacity: .1; } 91% { opacity: .4; } }
   .htop, .hbot { position: absolute; left: 18px; right: 18px; display: flex; justify-content: space-between; text-shadow: 0 1px 6px rgba(0,0,0,.55); }
   .htop { top: 14px; align-items: flex-start; }
   .hbot { bottom: 26px; align-items: flex-end; }
@@ -1273,10 +1211,10 @@ TropicalWeatherCard.styles = `
   .dot.loc i { color: var(--gold); opacity: 1; top: -13px; }
   .note { font-size: 11.5px; opacity: .55; margin-top: 12px; }
   .empty { padding: 24px 0; text-align: center; opacity: .6; font-size: 13px; }
-  @media (prefers-reduced-motion: reduce) { .cl, .rd, .tw, .fl, .alert, .tile.hot { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .alert, .tile.hot { animation: none; } }
 `;
 
 customElements.define("tropical-weather-card", TropicalWeatherCard);
 window.customCards = window.customCards || [];
-window.customCards.push({ type: "tropical-weather-card", name: "Tropical Weather Card", description: "A weather card for the tropics: sky, rain outlook, heat index, source check, tides", preview: true });
+window.customCards.push({ type: "tropical-weather-card", name: "Tropical Weather Card", description: "A weather card built for the tropics: heat index, rain outlook, thunderstorm tracking, tides and day planning in 19 languages", preview: true });
 console.info(`%c TROPICAL-WEATHER-CARD %c v${TWC_VERSION} `, "background:#d4af37;color:#000;font-weight:700", "background:#141416;color:#d4af37");

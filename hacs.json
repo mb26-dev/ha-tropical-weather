@@ -1,0 +1,6 @@
+{
+  "name": "Tropical Weather Card",
+  "filename": "tropical-weather-card.js",
+  "homeassistant": "2024.1.0",
+  "render_readme": true
+}
