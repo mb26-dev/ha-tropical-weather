@@ -1,10 +1,10 @@
 /*
  * Tropical Weather Card - working title, final name pending
- * v0.8.0 - prototype for the Thailand HA: icons, backgrounds, lightning, sea, pressure trend, cyclone, radar, week strip
+ * v0.9.0 - prototype for the Thailand HA: icons, backgrounds, lightning, sea, pressure trend, cyclone, radar, week strip
  * One card instead of five: animated sky, source check,
  * rain outlook, tropical tiles, hourly / 8 days / tides.
  */
-const TWC_VERSION = "0.8.0";
+const TWC_VERSION = "0.9.0";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -16,6 +16,7 @@ const I18N_KEYS = {
   uv: ["low", "moderate", "high", "very_high", "extreme"],
   trend: ["steady", "falling", "falling_fast", "rising", "rising_fast"],
   tab: ["hourly", "daily", "tide", "sources", "radar"],
+  extra: ["paws", "paws_ok", "paws_hot", "paws_danger", "walk_from", "best_time", "none_today", "laundry", "dries_until", "dries_all_day", "laundry_bad", "tomorrow", "mosquitoes", "bites", "storm_approach", "storm_away", "storm_steady", "stay_inside"],
   flat: ["loading", "no_rain", "rain_now", "rain_from", "until", "approx", "beyond_24h", "peak", "temperature", "wind", "humidity", "pressure", "measured", "local", "agree", "now", "today", "rain_probability", "gust", "no_tide", "rising", "falling", "high", "low", "high_tide", "low_tide", "entity_missing", "weather", "daylight_left", "to_sunrise", "sources_note", "feels_like", "heat_index", "mugginess", "uv_max", "lightning", "from", "strikes", "none_nearby", "sea", "water_temp", "tide", "km_away", "to_the", "radar_error", "next_24h", "max"],
 };
 
@@ -212,6 +213,29 @@ const I18N_SRC = {
   },
 };
 
+// v0.9 additions: tropical day insights and thunderstorm tracking (same order as I18N_KEYS.extra)
+const I18N_EXTRA = {
+  "en": ["Asphalt / paws", "OK for walks", "Hot – keep walks short", "Too hot for paws", "walks from {t}", "Best time outside", "No good window", "Laundry", "dries until {t}", "dries all day", "won't dry outside", "tomorrow", "Mosquitoes", "most bites {t}", "Thunderstorm approaching from {d} · overhead in ~{m} min", "moving away", "not moving closer", "Stay indoors until {t} (30/30 rule)"],
+  "de": ["Asphalt / Pfoten", "OK für Gassi", "Heiß – nur kurz raus", "Zu heiß für Pfoten", "Gassi ab {t}", "Beste Zeit draußen", "Kein gutes Fenster", "Wäsche", "trocknet bis {t}", "trocknet den ganzen Tag", "trocknet draußen nicht", "morgen", "Mücken", "meiste Stiche {t}", "Gewitter zieht aus {d} heran · in ca. {m} min hier", "zieht ab", "kommt nicht näher", "Drinnen bleiben bis {t} (30/30-Regel)"],
+  "th": ["ยางมะตอย / อุ้งเท้า", "พาเดินเล่นได้", "ร้อน – เดินสั้นๆ", "ร้อนเกินไปสำหรับอุ้งเท้า", "เดินเล่นได้ตั้งแต่ {t}", "ช่วงเวลาที่ดีที่สุดนอกบ้าน", "ไม่มีช่วงที่เหมาะ", "ตากผ้า", "แห้งได้ถึง {t}", "แห้งได้ทั้งวัน", "ตากข้างนอกไม่แห้ง", "พรุ่งนี้", "ยุง", "ยุงกัดมากช่วง {t}", "พายุฝนฟ้าคะนองกำลังเข้ามาจากทิศ {d} · ถึงในราว {m} นาที", "กำลังเคลื่อนออกไป", "ไม่ได้เข้าใกล้", "อยู่ในอาคารจนถึง {t} (กฎ 30/30)"],
+  "vi": ["Mặt đường / chân thú cưng", "Đi dạo được", "Nóng – chỉ đi ngắn", "Quá nóng cho chân", "đi dạo từ {t}", "Thời điểm ra ngoài tốt nhất", "Không có khung giờ tốt", "Phơi đồ", "khô đến {t}", "khô cả ngày", "phơi ngoài không khô", "ngày mai", "Muỗi", "đốt nhiều nhất {t}", "Dông đang đến từ hướng {d} · tới đây sau ~{m} phút", "đang đi xa", "không tiến lại gần", "Ở trong nhà đến {t} (quy tắc 30/30)"],
+  "id": ["Aspal / kaki hewan", "Aman untuk jalan-jalan", "Panas – jalan singkat saja", "Terlalu panas untuk kaki", "jalan-jalan mulai {t}", "Waktu terbaik di luar", "Tidak ada waktu yang baik", "Jemuran", "kering sampai {t}", "kering seharian", "tidak akan kering di luar", "besok", "Nyamuk", "paling banyak gigitan {t}", "Badai petir mendekat dari {d} · tiba dalam ~{m} mnt", "menjauh", "tidak mendekat", "Tetap di dalam sampai {t} (aturan 30/30)"],
+  "ms": ["Asfalt / tapak kaki", "Selamat untuk berjalan", "Panas – jalan sekejap", "Terlalu panas untuk tapak kaki", "berjalan dari {t}", "Masa terbaik di luar", "Tiada masa yang sesuai", "Jemuran", "kering hingga {t}", "kering sepanjang hari", "tidak akan kering di luar", "esok", "Nyamuk", "paling banyak gigitan {t}", "Ribut petir menghampiri dari {d} · tiba dalam ~{m} min", "semakin menjauh", "tidak menghampiri", "Kekal di dalam hingga {t} (peraturan 30/30)"],
+  "fil": ["Aspalto / paa", "Okay maglakad", "Mainit – saglit lang", "Masyadong mainit para sa paa", "lakad mula {t}", "Pinakamagandang oras sa labas", "Walang magandang oras", "Sampay", "tuyo hanggang {t}", "tuyo buong araw", "hindi matutuyo sa labas", "bukas", "Lamok", "pinakamaraming kagat {t}", "Paparating ang kulog at kidlat mula {d} · nandito sa ~{m} min", "papalayo", "hindi lumalapit", "Manatili sa loob hanggang {t} (30/30 rule)"],
+  "km": ["កៅស៊ូផ្លូវ / ជើងសត្វ", "ដើរលេងបាន", "ក្ដៅ – ដើរខ្លីៗ", "ក្ដៅពេកសម្រាប់ជើងសត្វ", "ដើរលេងចាប់ពី {t}", "ពេលល្អបំផុតនៅខាងក្រៅ", "គ្មានពេលល្អ", "ហាលខោអាវ", "ស្ងួតដល់ {t}", "ស្ងួតពេញមួយថ្ងៃ", "ហាលខាងក្រៅមិនស្ងួត", "ថ្ងៃស្អែក", "មូស", "ខាំច្រើនបំផុត {t}", "ផ្គររន្ទះកំពុងមកពីទិស {d} · មកដល់ប្រហែល {m} នាទី", "កំពុងរសាត់ចេញ", "មិនខិតមកជិត", "នៅក្នុងផ្ទះរហូតដល់ {t} (ច្បាប់ 30/30)"],
+  "lo": ["ຢາງປູທາງ / ຕີນສັດ", "ພາຍ່າງຫຼິ້ນໄດ້", "ຮ້ອນ – ຍ່າງສັ້ນໆ", "ຮ້ອນເກີນໄປສຳລັບຕີນ", "ຍ່າງຫຼິ້ນໄດ້ຕັ້ງແຕ່ {t}", "ເວລາທີ່ດີທີ່ສຸດຢູ່ນອກ", "ບໍ່ມີຊ່ວງທີ່ເໝາະ", "ຕາກເຄື່ອງ", "ແຫ້ງໄດ້ຮອດ {t}", "ແຫ້ງໄດ້ໝົດມື້", "ຕາກຂ້າງນອກບໍ່ແຫ້ງ", "ມື້ອື່ນ", "ຍຸງ", "ກັດຫຼາຍສຸດ {t}", "ພາຍຸຟ້າຮ້ອງກຳລັງມາຈາກທິດ {d} · ຮອດປະມານ {m} ນາທີ", "ກຳລັງເຄື່ອນອອກໄປ", "ບໍ່ໄດ້ເຂົ້າໃກ້", "ຢູ່ໃນເຮືອນຈົນຮອດ {t} (ກົດ 30/30)"],
+  "my": ["ကတ္တရာလမ်း / ခြေဖဝါး", "လမ်းလျှောက်ရန် အဆင်ပြေ", "ပူ – ခဏသာ လျှောက်ပါ", "ခြေဖဝါးအတွက် အလွန်ပူ", "{t} မှ လမ်းလျှောက်နိုင်", "အပြင်ထွက်ရန် အကောင်းဆုံးအချိန်", "သင့်တော်သောအချိန် မရှိ", "အဝတ်လှန်း", "{t} အထိ ခြောက်မည်", "တစ်နေကုန် ခြောက်မည်", "အပြင်တွင် မခြောက်ပါ", "မနက်ဖြန်", "ခြင်", "{t} တွင် အကိုက်အများဆုံး", "{d} မှ မိုးကြိုးမုန်တိုင်း လာနေသည် · ~{m} မိနစ်အတွင်း ရောက်မည်", "ဝေးသွားနေသည်", "နီးမလာပါ", "{t} အထိ အိမ်ထဲတွင်နေပါ (30/30 စည်းမျဉ်း)"],
+  "zh-Hans": ["沥青 / 爪垫", "适合遛狗", "炎热 – 短时散步", "对爪垫太烫", "{t} 起可遛狗", "最佳户外时段", "没有合适时段", "晾衣", "可晾干至 {t}", "全天可晾干", "户外晾不干", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正从{d}方向逼近 · 约 {m} 分钟后到达", "正在远离", "未靠近", "请待在室内至 {t}（30/30 规则）"],
+  "zh-Hant": ["瀝青 / 腳掌", "適合遛狗", "炎熱 – 短時散步", "對腳掌太燙", "{t} 起可遛狗", "最佳戶外時段", "沒有合適時段", "晾衣", "可晾乾至 {t}", "全天可晾乾", "戶外晾不乾", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正從{d}方向逼近 · 約 {m} 分鐘後到達", "正在遠離", "未靠近", "請待在室內至 {t}（30/30 規則）"],
+  "ja": ["路面 / 肉球", "散歩OK", "暑い – 短めに", "肉球には熱すぎ", "{t} から散歩可", "外出のベストタイム", "適した時間なし", "洗濯物", "{t} まで乾く", "一日中乾く", "外では乾かない", "明日", "蚊", "刺されやすい時間 {t}", "雷雨が{d}から接近中 · 約 {m} 分で到達", "遠ざかっています", "接近していません", "{t} まで屋内に（30/30ルール）"],
+  "ko": ["아스팔트 / 발바닥", "산책 가능", "더움 – 짧게 산책", "발바닥에 너무 뜨거움", "{t}부터 산책 가능", "외출하기 좋은 시간", "적당한 시간 없음", "빨래", "{t}까지 마름", "하루 종일 마름", "밖에서는 안 마름", "내일", "모기", "물림 최다 {t}", "뇌우가 {d} 방향에서 접근 중 · 약 {m}분 후 도달", "멀어지는 중", "접근하지 않음", "{t}까지 실내에 머무르세요 (30/30 규칙)"],
+  "hi": ["डामर / पंजे", "टहलने के लिए ठीक", "गर्म – छोटी सैर", "पंजों के लिए बहुत गर्म", "{t} से टहलें", "बाहर जाने का सबसे अच्छा समय", "कोई अच्छा समय नहीं", "कपड़े सुखाना", "{t} तक सूखेंगे", "पूरे दिन सूखेंगे", "बाहर नहीं सूखेंगे", "कल", "मच्छर", "सबसे ज़्यादा काटते हैं {t}", "{d} से आंधी-तूफ़ान आ रहा है · लगभग {m} मिनट में यहाँ", "दूर जा रहा है", "पास नहीं आ रहा", "{t} तक घर के अंदर रहें (30/30 नियम)"],
+  "bn": ["পিচ রাস্তা / থাবা", "হাঁটার জন্য ঠিক আছে", "গরম – অল্প হাঁটুন", "থাবার জন্য খুব গরম", "{t} থেকে হাঁটা যাবে", "বাইরে যাওয়ার সেরা সময়", "ভালো সময় নেই", "কাপড় শুকানো", "{t} পর্যন্ত শুকাবে", "সারাদিন শুকাবে", "বাইরে শুকাবে না", "আগামীকাল", "মশা", "সবচেয়ে বেশি কামড়ায় {t}", "{d} দিক থেকে বজ্রঝড় এগিয়ে আসছে · প্রায় {m} মিনিটে পৌঁছাবে", "দূরে সরে যাচ্ছে", "কাছে আসছে না", "{t} পর্যন্ত ঘরে থাকুন (30/30 নিয়ম)"],
+  "ne": ["पिच सडक / पन्जा", "हिँडाउन ठीक", "गर्मी – छोटो हिँडाइ", "पन्जाका लागि धेरै तातो", "{t} बाट हिँडाउनुहोस्", "बाहिर जाने उत्तम समय", "राम्रो समय छैन", "लुगा सुकाउने", "{t} सम्म सुक्छ", "दिनभर सुक्छ", "बाहिर सुक्दैन", "भोलि", "लामखुट्टे", "सबैभन्दा बढी टोक्ने {t}", "{d} बाट चट्याङसहितको आँधी नजिकिँदैछ · करिब {m} मिनेटमा यहाँ", "टाढा जाँदैछ", "नजिक आउँदैन", "{t} सम्म भित्रै बस्नुहोस् (30/30 नियम)"],
+  "si": ["තාර පාර / පාද", "ඇවිදීමට හොඳයි", "උණුසුම් – කෙටියෙන් ඇවිදින්න", "පාදවලට ඉතා උණුසුම්", "{t} සිට ඇවිදින්න", "එළියට යාමට හොඳම කාලය", "සුදුසු කාලයක් නැත", "රෙදි වියළීම", "{t} දක්වා වියළේ", "දවස පුරා වියළේ", "එළියේ වියළෙන්නේ නැත", "හෙට", "මදුරුවන්", "වැඩිම දෂ්ට කිරීම් {t}", "{d} දෙසින් ගිගුරුම් කුණාටුවක් ළං වෙයි · මිනි {m} කින් පමණ මෙහි", "ඈත් වෙමින්", "ළං නොවේ", "{t} දක්වා ඇතුළත සිටින්න (30/30 රීතිය)"],
+  "ta": ["தார் சாலை / பாதம்", "நடைக்கு ஏற்றது", "வெப்பம் – குறுகிய நடை", "பாதங்களுக்கு மிகவும் சூடு", "{t} முதல் நடை", "வெளியே செல்ல சிறந்த நேரம்", "நல்ல நேரம் இல்லை", "துணி காயவைத்தல்", "{t} வரை காயும்", "நாள் முழுவதும் காயும்", "வெளியே காயாது", "நாளை", "கொசுக்கள்", "அதிக கடி {t}", "{d} திசையிலிருந்து இடியுடன் கூடிய புயல் நெருங்குகிறது · சுமார் {m} நிமிடத்தில் இங்கே", "விலகிச் செல்கிறது", "நெருங்கவில்லை", "{t} வரை உள்ளே இருங்கள் (30/30 விதி)"],
+};
+
 // expand the compact source into nested key objects: I18N.th.cond["cloudy"], I18N.th.heat.normal, I18N.th.feels_like ...
 const I18N = {};
 for (const [lang, src] of Object.entries(I18N_SRC)) {
@@ -219,6 +243,7 @@ for (const [lang, src] of Object.entries(I18N_SRC)) {
   for (const g of ["cond", "heat", "dew", "uv", "trend", "tab"]) { o[g] = {}; I18N_KEYS[g].forEach((k, i) => { if (src[g] && src[g][i] !== undefined) o[g][k] = src[g][i]; }); }
   if (src.bft) o.bft = src.bft;
   I18N_KEYS.flat.forEach((k, i) => { if (src.flat && src.flat[i] !== undefined) o[k] = src.flat[i]; });
+  I18N_KEYS.extra.forEach((k, i) => { const ex = I18N_EXTRA[lang]; if (ex && ex[i] !== undefined) o[k] = ex[i]; });
   I18N[lang] = o;
 }
 
@@ -243,6 +268,25 @@ function T(key, vars) {
   return v;
 }
 const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+
+// solar elevation in degrees (NOAA low-precision formulas, good to ~0.5 deg)
+function sunElevation(t, lat, lon) {
+  const rad = Math.PI / 180, d = t / 86400000 - 10957.5;
+  const g = (357.529 + 0.98560028 * d) * rad, q = 280.459 + 0.98564736 * d;
+  const L = (q + 1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * rad, e = (23.439 - 0.00000036 * d) * rad;
+  const ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)), dec = Math.asin(Math.sin(e) * Math.sin(L));
+  const gmst = (18.697374558 + 24.06570982441908 * d) % 24;
+  const ha = (gmst * 15 + lon) * rad - ra;
+  return Math.asin(Math.sin(lat * rad) * Math.sin(dec) + Math.cos(lat * rad) * Math.cos(dec) * Math.cos(ha)) / rad;
+}
+// global horizontal irradiance W/m2: Haurwitz clear sky, reduced by cloud cover (Kasten-Czeplak)
+function irradiance(elev, cloudPct) {
+  if (elev <= 0) return 0;
+  const s = Math.sin(elev * Math.PI / 180);
+  return 1098 * s * Math.exp(-0.057 / s) * (1 - 0.75 * Math.pow(clamp((cloudPct ?? 50) / 100, 0, 1), 3.4));
+}
+// sun-heated asphalt surface: rises with irradiance, cooled by wind
+function asphaltTemp(air, g, wind) { return air + (0.033 * g) / (1 + (wind || 0) / 30); }
 
 function num(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
 function median(a) { const s = a.filter((x) => x !== null).sort((x, y) => x - y); if (!s.length) return null; const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
@@ -409,6 +453,8 @@ class TropicalWeatherCard extends HTMLElement {
       asset_path: null,
       wind_gust: null,
       language: "auto",
+      solar_radiation: null,
+      insights: true,
     }, config);
     if (!this._config.sources.includes(this._config.weather)) this._config.sources.unshift(this._config.weather);
     this._lastKey = "";
@@ -423,6 +469,7 @@ class TropicalWeatherCard extends HTMLElement {
     const c = this._config;
     const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust].filter(Boolean);
     if (this._radarEl) this._radarEl.hass = hass;
+    this._trackLightning(first);
     const key = ids.map((id) => { const s = hass.states[id]; return s ? s.last_updated + s.state : "x"; }).join("|");
     if (key !== this._lastKey) { this._lastKey = key; this._render(); }
   }
@@ -489,6 +536,118 @@ class TropicalWeatherCard extends HTMLElement {
     const t = this._num(this._config.temperature) ?? this._attr(this._config.weather, "temperature") ?? 15;
     const msl = h > 0 ? p * Math.pow(1 - (0.0065 * h) / (t + 0.0065 * h + 273.15), -5.257) : p;
     return msl + (num(this._config.pressure_offset) || 0);
+  }
+
+  // ---------- thunderstorm tracking (Blitzortung: distance = nearest strike, updates per strike) ----------
+  _trackLightning(first) {
+    const id = this._config.lightning_distance;
+    if (!id) return;
+    this._lhist = this._lhist || [];
+    if (first && this._hass.callWS) {
+      this._hass.callWS({ type: "history/history_during_period", start_time: new Date(Date.now() - 3600000).toISOString(), entity_ids: [id], minimal_response: true, no_attributes: true, significant_changes_only: false })
+        .then((r) => {
+          const pts = (r[id] || []).map((x) => ({ t: (x.lu || x.lc) * 1000, d: num(x.s) })).filter((x) => x.d !== null);
+          const seen = new Set(this._lhist.map((x) => x.t));
+          this._lhist = [...pts.filter((x) => !seen.has(x.t)), ...this._lhist].sort((a, b) => a.t - b.t);
+          this._lastKey = ""; this._render();
+        }).catch(() => null);
+    }
+    const s = this._hass.states[id];
+    const d = s ? num(s.state) : null;
+    if (d !== null) {
+      const t = Date.parse(s.last_changed);
+      if (!this._lhist.length || this._lhist[this._lhist.length - 1].t !== t) this._lhist.push({ t, d });
+    }
+    const cut = Date.now() - 2 * 3600000;
+    this._lhist = this._lhist.filter((x) => x.t > cut);
+  }
+
+  _stormTrack() {
+    const now = Date.now(), pts = (this._lhist || []).filter((x) => x.t > now - 40 * 60000);
+    const res = { trend: null, eta: null, until: null };
+    // 30/30 rule: indoors until 30 min after the last strike within 10 km
+    const near = (this._lhist || []).filter((x) => x.d <= 10 && x.t > now - 30 * 60000);
+    if (near.length) res.until = near[near.length - 1].t + 30 * 60000;
+    if (pts.length < 3 || pts[pts.length - 1].t - pts[0].t < 6 * 60000) return res;
+    const n = pts.length, mx = pts.reduce((a, p) => a + p.t, 0) / n, my = pts.reduce((a, p) => a + p.d, 0) / n;
+    const slope = pts.reduce((a, p) => a + (p.t - mx) * (p.d - my), 0) / pts.reduce((a, p) => a + (p.t - mx) ** 2, 0) * 60000; // km per min
+    const last = pts[n - 1].d;
+    if (slope < -0.15) { res.trend = "approach"; res.eta = Math.min(180, Math.round(last / -slope)); }
+    else if (slope > 0.15) res.trend = "away";
+    else res.trend = "steady";
+    return res;
+  }
+
+  // ---------- tropical day insights ----------
+  _ahead(hours) {
+    const now = Date.now();
+    return (this._hourly || []).filter((x) => Date.parse(x.datetime) + 3600000 > now).slice(0, hours);
+  }
+  _geo() { const c = this._hass.config || {}; return { lat: num(c.latitude) ?? 0, lon: num(c.longitude) ?? 0 }; }
+  _hh(t) { return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: this._tz() }).format(new Date(t)).replace(/\D/g, ""); }
+  _localHour(t) { return parseInt(this._hh(t), 10); }
+
+  _insights(temp, ws) {
+    const h = this._ahead(30);
+    if (h.length < 6) return "";
+    const { lat, lon } = this._geo();
+    const a = this._state(this._config.weather).attributes;
+    const hot = this._heatFrom();
+    const rows = h.map((x) => {
+      const t = Date.parse(x.datetime), elev = sunElevation(t + 1800000, lat, lon);
+      const g = irradiance(elev, num(x.cloud_coverage));
+      return { t, elev, g, pp: num(x.precipitation_probability) || 0, mm: num(x.precipitation) || 0, rh: num(x.humidity), app: num(x.apparent_temperature) ?? num(x.temperature),
+        temp: num(x.temperature), wind: num(x.wind_speed) || 0, storm: String(x.condition).startsWith("lightning"),
+        asph: asphaltTemp(num(x.temperature) ?? 28, g, num(x.wind_speed) || 0) };
+    });
+    const tiles = [];
+
+    // 1) paws / asphalt
+    const measured = this._num(this._config.solar_radiation);
+    const gNow = measured ?? irradiance(sunElevation(Date.now(), lat, lon), num(a.cloud_coverage));
+    const asNow = asphaltTemp(temp ?? num(a.temperature) ?? 28, gNow, ws || 0);
+    const pl = asNow < 40 ? ["paws_ok", "#4caf50"] : asNow < 52 ? ["paws_hot", "#ff9800"] : ["paws_danger", "#f44336"];
+    let pawSub = T(pl[0]);
+    if (asNow >= 40) { const ok = rows.find((r) => r.t > Date.now() && r.asph < 40 && r.pp < 50); if (ok) pawSub += ` · ${T("walk_from", { t: this._fmtTime(new Date(ok.t)) })}`; }
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:paw"></ha-icon>${T("paws")}</span><b style="color:${pl[1]}">${Math.round(asNow)}°</b><span class="ts">${pawSub}</span></div>`);
+
+    // 2) best time outside: dry, below the hot band, no thunder, 05-22 h local
+    const good = rows.slice(0, 20).filter((r) => { const lh = this._localHour(r.t); return lh >= 5 && lh <= 21 && r.pp < 30 && !r.storm && (r.app ?? 99) < hot; });
+    const wins = [];
+    for (const r of good) {
+      const w = wins[wins.length - 1];
+      if (w && r.t - w.end <= 3600000) w.end = r.t; else wins.push({ start: r.t, end: r.t });
+    }
+    const dayKey = (t) => new Intl.DateTimeFormat("en-CA", { timeZone: this._tz() }).format(new Date(t));
+    const today = dayKey(Date.now());
+    const fmtW = (w) => `${dayKey(w.start) !== today ? T("tomorrow") + " " : ""}${w.start <= Date.now() ? T("now") : this._hh(w.start)}–${this._hh(w.end + 3600000)}`;
+    const shown = wins.slice(0, 2);
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:walk"></ha-icon>${T("best_time")}</span><b class="sm">${shown.length ? fmtW(shown[0]) : "–"}</b><span class="ts">${shown.length > 1 ? fmtW(shown[1]) : (shown.length ? "&nbsp;" : T("none_today"))}</span></div>`);
+
+    // 3) laundry: daylight hours (sun > 12 deg) without rain from now, or tomorrow when it is dark
+    const isDay = (r) => r.elev > 12;
+    let day = rows.filter((r) => r.t + 3600000 > Date.now());
+    let prefix = "";
+    if (!day.length || !isDay(day[0])) { const nx = day.findIndex(isDay); day = nx >= 0 ? day.slice(nx) : []; if (nx > 0 && day.length && this._localHour(day[0].t) < 12 && new Date(day[0].t).getDate() !== new Date().getDate()) prefix = T("tomorrow") + " · "; }
+    let n = 0;
+    while (n < day.length && isDay(day[n]) && day[n].pp < 40 && (day[n].rh ?? 80) < 92) n++;
+    const dayLen = day.findIndex((r) => !isDay(r));
+    let lSub, lCol;
+    if (n >= 3 && (dayLen === -1 ? n === day.length : n >= dayLen)) { lSub = prefix + T("dries_all_day"); lCol = "#4caf50"; }
+    else if (n >= 3) { lSub = prefix + T("dries_until", { t: this._fmtTime(new Date(day[n].t)) }); lCol = "#ffc107"; }
+    else { lSub = prefix + T("laundry_bad"); lCol = "#f44336"; }
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:tshirt-crew-outline"></ha-icon>${T("laundry")}</span><b class="sm" style="color:${lCol}">${n >= 3 ? "✓" : "✗"}</b><span class="ts">${lSub}</span></div>`);
+
+    // 4) mosquitoes (Aedes): warm 26-32 deg, humid, recent / coming rain = breeding water
+    const nx24 = rows.slice(0, 24);
+    const tm = nx24.reduce((s2, r) => s2 + (r.temp ?? 28), 0) / nx24.length, rh = nx24.reduce((s2, r) => s2 + (r.rh ?? 75), 0) / nx24.length;
+    const rain48 = rows.reduce((s2, r) => s2 + r.mm, 0) + (num((this._daily || [])[0]?.precipitation) || 0);
+    let sc = tm >= 26 && tm <= 32 ? 2 : tm >= 22 && tm <= 35 ? 1 : 0;
+    sc += rh >= 70 ? 1 : 0; sc += rain48 >= 20 ? 2 : rain48 >= 5 ? 1 : 0;
+    const ml = sc >= 4 ? ["uv.high", "#f44336"] : sc >= 2 ? ["uv.moderate", "#ffc107"] : ["uv.low", "#4caf50"];
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? T("bites", { t: "06–08 · 16–18" }) : "&nbsp;"}</span></div>`);
+
+    return `<div class="tiles ins-row">${tiles.join("")}</div>`;
   }
 
   _lightning() {
@@ -963,20 +1122,24 @@ class TropicalWeatherCard extends HTMLElement {
             ${this._rangeBar(today, temp)}${locT !== null ? `<div class="msr">${T("measured")}</div>` : ""}
           </div>
         </div>`;
+    const storm = this._stormTrack();
     const tiles = [
       `<div class="tile"><span class="tl">${T("heat_index")}</span><b style="color:${hl.c}">${hi !== null ? Math.round(hi) + "°" : "–"}</b><span class="ts">${hl.t}</span></div>`,
       `<div class="tile"><span class="tl">${T("mugginess")}</span><b>${dp !== null ? dp.toFixed(0) + "°" : "–"}</b><span class="ts">${dewLevel(dp)} · ${hum !== null ? Math.round(hum) : "–"} %</span></div>`,
       `<div class="tile"><span class="tl">${T("uv_max")}</span><b style="color:${ul.c}">${uvMax !== null ? uvMax.toFixed(1) : "–"}</b><span class="ts">${ul.t}</span></div>`,
       { wind: true },
       pShown !== null ? `<div class="tile"><span class="tl">${T("pressure")}</span><b>${Math.round(pShown)}<small> hPa</small></b><span class="ts">${pt ? `${pt.arrow} ${pt.t > 0 ? "+" : ""}${pt.t.toFixed(1)} / 3 h · ${pt.label}` : (pLocal !== null ? T("measured") : "")}</span></div>` : "",
-      lt ? `<div class="tile${lt.near ? " hot" : ""}"><span class="tl">${T("lightning")}</span>${lt.active ? `<b>${lt.d.toFixed(0)}<small> km</small></b><span class="ts">${lt.az !== null ? `${T("from", { d: COMPASS[Math.round(lt.az / 45) % 8] })} · ` : ""}${T("strikes", { n: lt.n })}</span>` : `<b>–</b><span class="ts">${T("none_nearby")}</span>`}</div>` : "",
+      lt ? `<div class="tile${lt.near ? " hot" : ""}"><span class="tl">${T("lightning")}</span>${lt.active ? `<b>${lt.d.toFixed(0)}<small> km</small></b><span class="ts">${lt.az !== null ? `${T("from", { d: COMPASS[Math.round(lt.az / 45) % 8] })} · ` : ""}${T("strikes", { n: lt.n })}${storm.trend ? ` · ${storm.trend === "approach" ? "▼ ~" + storm.eta + " min" : T(storm.trend === "away" ? "storm_away" : "storm_steady")}` : ""}</span>` : `<b>–</b><span class="ts">${T("none_nearby")}</span>`}</div>` : "",
       sea !== null ? `<div class="tile"><span class="tl">${T("sea")}</span><b>${sea.toFixed(1)}°</b><span class="ts">${T("water_temp")}</span></div>` : "",
       tide ? `<div class="tile"><span class="tl">${T("tide")}</span><b>${tide.now.toFixed(1)}<small> m</small></b><span class="ts">${tide.rising ? "▲ " + T("rising") : "▼ " + T("falling")} · ${tide.next.type === "high" ? T("high") : T("low")} ${this._fmtTime(new Date(tide.next.t))}</span></div>` : ""
     ].filter(Boolean);
     this._root.content.innerHTML = `
       ${cyc ? `<div class="alert cyc">${this._icon("tropical-cyclone", 30)}<span>${T("cond.tropical-cyclone")}: <b>${cyc.name}</b>${cyc.dist !== null ? ` · ${T("km_away", { d: Math.round(cyc.dist) })}` : ""}</span></div>` : ""}
-      ${lt && lt.near ? `<div class="alert bolt">${this._icon("lightning", 30)}<span>${T("lightning")} <b>${lt.d.toFixed(0)} km</b>${lt.az !== null ? ` ${T("to_the", { d: COMPASS[Math.round(lt.az / 45) % 8] })}` : ""} · ${T("strikes", { n: lt.n })}</span></div>` : ""}
+      ${lt && lt.near && storm.trend !== "approach" ? `<div class="alert bolt">${this._icon("lightning", 30)}<span>${T("lightning")} <b>${lt.d.toFixed(0)} km</b>${lt.az !== null ? ` ${T("to_the", { d: COMPASS[Math.round(lt.az / 45) % 8] })}` : ""} · ${T("strikes", { n: lt.n })}</span></div>` : ""}
+      ${storm.trend === "approach" && lt && lt.active && (storm.eta <= 60 || lt.d <= 30) ? `<div class="alert bolt">${this._icon("lightning-rainy", 30)}<span>${T("storm_approach", { d: lt.az !== null ? COMPASS[Math.round(lt.az / 45) % 8] : "–", m: storm.eta })}</span></div>` : ""}
+      ${storm.until && storm.until > Date.now() ? `<div class="alert bolt">${this._icon("lightning", 30)}<span>${T("stay_inside", { t: this._fmtTime(new Date(storm.until)) })}</span></div>` : ""}
       <div class="rain ${rain.cls}">${this._icon(rain.icon, 30)}<span>${rain.text}</span></div>
+      ${c.insights !== false ? this._insights(temp, ws) : ""}
       ${this._tiles(tiles, { ws, wb, gust: this._gust(), sources: c.sources })}
       ${c.show_week !== false ? this._weekStrip(this._daily) : ""}
       <div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${this._tab === k ? "on" : ""}">${l}</button>`).join("")}</div>
@@ -1047,6 +1210,11 @@ TropicalWeatherCard.styles = `
   .legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
   .content { container-type: inline-size; }
   .tiles { grid-auto-flow: row dense; }
+  .ins-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tile.ins .tl { display: flex; align-items: center; gap: 4px; }
+  .tile.ins ha-icon { --mdc-icon-size: 14px; width: 14px; height: 14px; color: var(--gold); opacity: .9; }
+  .tile b.sm { font-size: 17px; }
+  @container (max-width: 520px) { .ins-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .content > :first-child { margin-top: -18px; position: relative; z-index: 2; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background-color: rgba(20,24,32,.72); }
   .rng { display: flex; align-items: center; gap: 6px; justify-content: flex-end; font-size: 12px; margin-top: 3px; }
   .rng span { opacity: .8; }
