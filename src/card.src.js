@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.0.0";
+const TWC_VERSION = "1.0.1";
 
 /*__I18N__*/
 let LANG = "en";
@@ -825,7 +825,8 @@ class TropicalWeatherCard extends HTMLElement {
           <div class="temp">${temp !== null ? temp.toFixed(1) : "–"}<sup>°C</sup></div>
           <div class="hmeta">
             <div>${T("feels_like")} <b style="color:${hl.c}">${hi !== null ? Math.round(hi) + "°" : "–"}</b> · ${hl.t}</div>
-            ${this._rangeBar(today, temp)}${locT !== null ? `<div class="msr">${T("measured")}</div>` : ""}
+            ${hum !== null ? `<div class="hhum"><svg width="11" height="13" viewBox="0 0 24 28"><path d="M12 2C12 2 3 13 3 18.5a9 9 0 0 0 18 0C21 13 12 2 12 2z" fill="#4fc3f7"/></svg>${T("humidity")} <b>${Math.round(hum)} %</b>${locH !== null ? ` <span class="gold">●</span>` : ""}</div>` : ""}
+            ${this._rangeBar(today, temp)}${locT !== null || locH !== null ? `<div class="msr">● ${T("measured")}</div>` : ""}
           </div>
         </div>`;
     const storm = this._stormTrack();
@@ -919,6 +920,9 @@ TropicalWeatherCard.styles = `
   .rng i { position: relative; width: 74px; height: 5px; border-radius: 3px; background: linear-gradient(90deg, #4fc3f7, #ffca28, #ff7043); }
   .rng b { position: absolute; top: 50%; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(20,20,22,.8), 0 0 6px rgba(255,255,255,.7); }
   .msr { font-size: 11px; color: var(--gold); margin-top: 2px; }
+  .hhum { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+  .hhum b { font-weight: 600; }
+  .hhum .gold { font-size: 9px; }
   .wg { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 4px; }
   .wg svg { width: 100%; height: 54px; display: block; }
   .wgh { display: flex; justify-content: space-between; gap: 6px; font-size: 10.5px; opacity: .7; margin-bottom: 4px; white-space: nowrap; }
