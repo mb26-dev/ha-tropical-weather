@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.0.1";
+const TWC_VERSION = "1.0.2";
 
 /*__I18N__*/
 let LANG = "en";
@@ -358,7 +358,7 @@ class TropicalWeatherCard extends HTMLElement {
       const t = Date.parse(x.datetime), elev = sunElevation(t + 1800000, lat, lon);
       const g = irradiance(elev, num(x.cloud_coverage));
       return { t, elev, g, pp: num(x.precipitation_probability) || 0, mm: num(x.precipitation) || 0, rh: num(x.humidity), app: num(x.apparent_temperature) ?? num(x.temperature),
-        temp: num(x.temperature), wind: num(x.wind_speed) || 0, storm: String(x.condition).startsWith("lightning"),
+        temp: num(x.temperature), wind: num(x.wind_speed) || 0, uv: num(x.uv_index), storm: String(x.condition).startsWith("lightning"),
         asph: asphaltTemp(num(x.temperature) ?? 28, g, num(x.wind_speed) || 0) };
     });
     const tiles = [];
@@ -374,7 +374,9 @@ class TropicalWeatherCard extends HTMLElement {
 
     // 2) best time outside: dry, below the hot band, no thunder, 05-22 h local
     // from civil dawn (sun above -6 deg) until 22 h local
-    const good = rows.slice(0, 20).filter((r) => { const lh = this._localHour(r.t); return sunElevation(r.t, lat, lon) > -6 && lh <= 21 && lh >= 4 && r.pp < 30 && !r.storm && (r.app ?? 99) < hot; });
+    // comfortable outside: after dawn, until 22 h, dry, no thunder, UV below "high" and feels-like a step below the hot band
+    const comfy = hot - 3;
+    const good = rows.slice(0, 30).filter((r) => { const lh = this._localHour(r.t); return sunElevation(r.t, lat, lon) > -6 && lh <= 21 && lh >= 4 && r.pp < 30 && !r.storm && (r.app ?? 99) < comfy && (r.uv ?? 0) < 6; });
     const wins = [];
     for (const r of good) {
       const w = wins[wins.length - 1];
@@ -382,9 +384,12 @@ class TropicalWeatherCard extends HTMLElement {
     }
     const dayKey = (t) => new Intl.DateTimeFormat("en-CA", { timeZone: this._tz() }).format(new Date(t));
     const today = dayKey(Date.now());
-    const fmtW = (w) => `${dayKey(w.start) !== today ? T("tomorrow") + " " : ""}${w.start <= Date.now() ? T("now") : this._hh(w.start)}–${this._hh(w.end + 3600000)}`;
-    const shown = wins.slice(0, 2);
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:walk"></ha-icon>${T("best_time")}</span><b class="sm">${shown.length ? fmtW(shown[0]) : "–"}</b><span class="ts">${shown.length > 1 ? fmtW(shown[1]) : (shown.length ? "&nbsp;" : T("none_today"))}</span></div>`);
+    const cap = (x) => String(x).charAt(0).toUpperCase() + String(x).slice(1);
+    const dayOf = (w) => cap(dayKey(w.start) === today ? T("today") : T("tomorrow"));
+    const span = (w) => `${w.start <= Date.now() ? T("now") : this._hh(w.start)}–${this._hh(w.end + 3600000)}`;
+    const w1 = wins[0], w2 = wins[1];
+    const bestSub = w1 ? dayOf(w1) + (w2 ? ` · + ${dayOf(w2) !== dayOf(w1) ? dayOf(w2) + " " : ""}${span(w2)}` : "") : T("none_today");
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:walk"></ha-icon>${T("best_time")}</span><b class="sm">${w1 ? span(w1) : "–"}</b><span class="ts">${bestSub}</span></div>`);
 
     // 3) laundry: daylight hours (sun > 12 deg) without rain from now, or tomorrow when it is dark
     const isDay = (r) => r.elev > 12;
@@ -407,9 +412,19 @@ class TropicalWeatherCard extends HTMLElement {
     let sc = tm >= 26 && tm <= 32 ? 2 : tm >= 22 && tm <= 35 ? 1 : 0;
     sc += rh >= 70 ? 1 : 0; sc += rain48 >= 20 ? 2 : rain48 >= 5 ? 1 : 0;
     const ml = sc >= 4 ? ["uv.high", "#f44336"] : sc >= 2 ? ["uv.moderate", "#ffc107"] : ["uv.low", "#4caf50"];
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? T("bites", { t: "06–08 · 16–18" }) : "&nbsp;"}</span></div>`);
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText() : "&nbsp;"}</span></div>`);
 
     return `<div class="tiles ins-row">${tiles.join("")}</div>`;
+  }
+
+  // Aedes biting peaks: early morning and late afternoon (local time)
+  _biteText() {
+    const lh = this._localHour(Date.now());
+    const P = [[6, 8], [16, 18]];
+    if (P.some(([a, b]) => lh >= a && lh < b)) return T("bites_now");
+    const nx = P.find(([a]) => lh < a);
+    const f = ([a, b]) => `${String(a).padStart(2, "0")}–${String(b).padStart(2, "0")}`;
+    return T("next_peak", { t: nx ? f(nx) : `${T("tomorrow")} ${f(P[0])}` });
   }
 
   _lightning() {

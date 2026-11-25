@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.0.1";
+const TWC_VERSION = "1.0.2";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -16,7 +16,7 @@ const I18N_KEYS = {
   uv: ["low", "moderate", "high", "very_high", "extreme"],
   trend: ["steady", "falling", "falling_fast", "rising", "rising_fast"],
   tab: ["hourly", "daily", "tide", "sources", "radar"],
-  extra: ["paws", "paws_ok", "paws_hot", "paws_danger", "walk_from", "best_time", "none_today", "laundry", "dries_until", "dries_all_day", "laundry_bad", "tomorrow", "mosquitoes", "bites", "storm_approach", "storm_away", "storm_steady", "stay_inside"],
+  extra: ["paws", "paws_ok", "paws_hot", "paws_danger", "walk_from", "best_time", "none_today", "laundry", "dries_until", "dries_all_day", "laundry_bad", "tomorrow", "mosquitoes", "bites", "storm_approach", "storm_away", "storm_steady", "stay_inside", "bites_now", "next_peak"],
   flat: ["loading", "no_rain", "rain_now", "rain_from", "until", "approx", "beyond_24h", "peak", "temperature", "wind", "humidity", "pressure", "measured", "local", "agree", "now", "today", "rain_probability", "gust", "no_tide", "rising", "falling", "high", "low", "high_tide", "low_tide", "entity_missing", "weather", "daylight_left", "to_sunrise", "sources_note", "feels_like", "heat_index", "mugginess", "uv_max", "lightning", "from", "strikes", "none_nearby", "sea", "water_temp", "tide", "km_away", "to_the", "radar_error", "next_24h", "max"],
 };
 
@@ -215,25 +215,25 @@ const I18N_SRC = {
 
 // v0.9 additions: tropical day insights and thunderstorm tracking (same order as I18N_KEYS.extra)
 const I18N_EXTRA = {
-  "en": ["Asphalt / paws", "OK for walks", "Hot – keep walks short", "Too hot for paws", "walks from {t}", "Best time outside", "No good window", "Laundry", "dries until {t}", "dries all day", "won't dry outside", "tomorrow", "Mosquitoes", "most bites {t}", "Thunderstorm approaching from {d} · overhead in ~{m} min", "moving away", "not moving closer", "Stay indoors until {t} (30/30 rule)"],
-  "de": ["Asphalt / Pfoten", "OK für Gassi", "Heiß – nur kurz raus", "Zu heiß für Pfoten", "Gassi ab {t}", "Beste Zeit draußen", "Kein gutes Fenster", "Wäsche", "trocknet bis {t}", "trocknet den ganzen Tag", "trocknet draußen nicht", "morgen", "Mücken", "meiste Stiche {t}", "Gewitter zieht aus {d} heran · in ca. {m} min hier", "zieht ab", "kommt nicht näher", "Drinnen bleiben bis {t} (30/30-Regel)"],
-  "th": ["ยางมะตอย / อุ้งเท้า", "พาเดินเล่นได้", "ร้อน – เดินสั้นๆ", "ร้อนเกินไปสำหรับอุ้งเท้า", "เดินเล่นได้ตั้งแต่ {t}", "ช่วงเวลาที่ดีที่สุดนอกบ้าน", "ไม่มีช่วงที่เหมาะ", "ตากผ้า", "แห้งได้ถึง {t}", "แห้งได้ทั้งวัน", "ตากข้างนอกไม่แห้ง", "พรุ่งนี้", "ยุง", "ยุงกัดมากช่วง {t}", "พายุฝนฟ้าคะนองกำลังเข้ามาจากทิศ {d} · ถึงในราว {m} นาที", "กำลังเคลื่อนออกไป", "ไม่ได้เข้าใกล้", "อยู่ในอาคารจนถึง {t} (กฎ 30/30)"],
-  "vi": ["Mặt đường / chân thú cưng", "Đi dạo được", "Nóng – chỉ đi ngắn", "Quá nóng cho chân", "đi dạo từ {t}", "Thời điểm ra ngoài tốt nhất", "Không có khung giờ tốt", "Phơi đồ", "khô đến {t}", "khô cả ngày", "phơi ngoài không khô", "ngày mai", "Muỗi", "đốt nhiều nhất {t}", "Dông đang đến từ hướng {d} · tới đây sau ~{m} phút", "đang đi xa", "không tiến lại gần", "Ở trong nhà đến {t} (quy tắc 30/30)"],
-  "id": ["Aspal / kaki hewan", "Aman untuk jalan-jalan", "Panas – jalan singkat saja", "Terlalu panas untuk kaki", "jalan-jalan mulai {t}", "Waktu terbaik di luar", "Tidak ada waktu yang baik", "Jemuran", "kering sampai {t}", "kering seharian", "tidak akan kering di luar", "besok", "Nyamuk", "paling banyak gigitan {t}", "Badai petir mendekat dari {d} · tiba dalam ~{m} mnt", "menjauh", "tidak mendekat", "Tetap di dalam sampai {t} (aturan 30/30)"],
-  "ms": ["Asfalt / tapak kaki", "Selamat untuk berjalan", "Panas – jalan sekejap", "Terlalu panas untuk tapak kaki", "berjalan dari {t}", "Masa terbaik di luar", "Tiada masa yang sesuai", "Jemuran", "kering hingga {t}", "kering sepanjang hari", "tidak akan kering di luar", "esok", "Nyamuk", "paling banyak gigitan {t}", "Ribut petir menghampiri dari {d} · tiba dalam ~{m} min", "semakin menjauh", "tidak menghampiri", "Kekal di dalam hingga {t} (peraturan 30/30)"],
-  "fil": ["Aspalto / paa", "Okay maglakad", "Mainit – saglit lang", "Masyadong mainit para sa paa", "lakad mula {t}", "Pinakamagandang oras sa labas", "Walang magandang oras", "Sampay", "tuyo hanggang {t}", "tuyo buong araw", "hindi matutuyo sa labas", "bukas", "Lamok", "pinakamaraming kagat {t}", "Paparating ang kulog at kidlat mula {d} · nandito sa ~{m} min", "papalayo", "hindi lumalapit", "Manatili sa loob hanggang {t} (30/30 rule)"],
-  "km": ["កៅស៊ូផ្លូវ / ជើងសត្វ", "ដើរលេងបាន", "ក្ដៅ – ដើរខ្លីៗ", "ក្ដៅពេកសម្រាប់ជើងសត្វ", "ដើរលេងចាប់ពី {t}", "ពេលល្អបំផុតនៅខាងក្រៅ", "គ្មានពេលល្អ", "ហាលខោអាវ", "ស្ងួតដល់ {t}", "ស្ងួតពេញមួយថ្ងៃ", "ហាលខាងក្រៅមិនស្ងួត", "ថ្ងៃស្អែក", "មូស", "ខាំច្រើនបំផុត {t}", "ផ្គររន្ទះកំពុងមកពីទិស {d} · មកដល់ប្រហែល {m} នាទី", "កំពុងរសាត់ចេញ", "មិនខិតមកជិត", "នៅក្នុងផ្ទះរហូតដល់ {t} (ច្បាប់ 30/30)"],
-  "lo": ["ຢາງປູທາງ / ຕີນສັດ", "ພາຍ່າງຫຼິ້ນໄດ້", "ຮ້ອນ – ຍ່າງສັ້ນໆ", "ຮ້ອນເກີນໄປສຳລັບຕີນ", "ຍ່າງຫຼິ້ນໄດ້ຕັ້ງແຕ່ {t}", "ເວລາທີ່ດີທີ່ສຸດຢູ່ນອກ", "ບໍ່ມີຊ່ວງທີ່ເໝາະ", "ຕາກເຄື່ອງ", "ແຫ້ງໄດ້ຮອດ {t}", "ແຫ້ງໄດ້ໝົດມື້", "ຕາກຂ້າງນອກບໍ່ແຫ້ງ", "ມື້ອື່ນ", "ຍຸງ", "ກັດຫຼາຍສຸດ {t}", "ພາຍຸຟ້າຮ້ອງກຳລັງມາຈາກທິດ {d} · ຮອດປະມານ {m} ນາທີ", "ກຳລັງເຄື່ອນອອກໄປ", "ບໍ່ໄດ້ເຂົ້າໃກ້", "ຢູ່ໃນເຮືອນຈົນຮອດ {t} (ກົດ 30/30)"],
-  "my": ["ကတ္တရာလမ်း / ခြေဖဝါး", "လမ်းလျှောက်ရန် အဆင်ပြေ", "ပူ – ခဏသာ လျှောက်ပါ", "ခြေဖဝါးအတွက် အလွန်ပူ", "{t} မှ လမ်းလျှောက်နိုင်", "အပြင်ထွက်ရန် အကောင်းဆုံးအချိန်", "သင့်တော်သောအချိန် မရှိ", "အဝတ်လှန်း", "{t} အထိ ခြောက်မည်", "တစ်နေကုန် ခြောက်မည်", "အပြင်တွင် မခြောက်ပါ", "မနက်ဖြန်", "ခြင်", "{t} တွင် အကိုက်အများဆုံး", "{d} မှ မိုးကြိုးမုန်တိုင်း လာနေသည် · ~{m} မိနစ်အတွင်း ရောက်မည်", "ဝေးသွားနေသည်", "နီးမလာပါ", "{t} အထိ အိမ်ထဲတွင်နေပါ (30/30 စည်းမျဉ်း)"],
-  "zh-Hans": ["沥青 / 爪垫", "适合遛狗", "炎热 – 短时散步", "对爪垫太烫", "{t} 起可遛狗", "最佳户外时段", "没有合适时段", "晾衣", "可晾干至 {t}", "全天可晾干", "户外晾不干", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正从{d}方向逼近 · 约 {m} 分钟后到达", "正在远离", "未靠近", "请待在室内至 {t}（30/30 规则）"],
-  "zh-Hant": ["瀝青 / 腳掌", "適合遛狗", "炎熱 – 短時散步", "對腳掌太燙", "{t} 起可遛狗", "最佳戶外時段", "沒有合適時段", "晾衣", "可晾乾至 {t}", "全天可晾乾", "戶外晾不乾", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正從{d}方向逼近 · 約 {m} 分鐘後到達", "正在遠離", "未靠近", "請待在室內至 {t}（30/30 規則）"],
-  "ja": ["路面 / 肉球", "散歩OK", "暑い – 短めに", "肉球には熱すぎ", "{t} から散歩可", "外出のベストタイム", "適した時間なし", "洗濯物", "{t} まで乾く", "一日中乾く", "外では乾かない", "明日", "蚊", "刺されやすい時間 {t}", "雷雨が{d}から接近中 · 約 {m} 分で到達", "遠ざかっています", "接近していません", "{t} まで屋内に（30/30ルール）"],
-  "ko": ["아스팔트 / 발바닥", "산책 가능", "더움 – 짧게 산책", "발바닥에 너무 뜨거움", "{t}부터 산책 가능", "외출하기 좋은 시간", "적당한 시간 없음", "빨래", "{t}까지 마름", "하루 종일 마름", "밖에서는 안 마름", "내일", "모기", "물림 최다 {t}", "뇌우가 {d} 방향에서 접근 중 · 약 {m}분 후 도달", "멀어지는 중", "접근하지 않음", "{t}까지 실내에 머무르세요 (30/30 규칙)"],
-  "hi": ["डामर / पंजे", "टहलने के लिए ठीक", "गर्म – छोटी सैर", "पंजों के लिए बहुत गर्म", "{t} से टहलें", "बाहर जाने का सबसे अच्छा समय", "कोई अच्छा समय नहीं", "कपड़े सुखाना", "{t} तक सूखेंगे", "पूरे दिन सूखेंगे", "बाहर नहीं सूखेंगे", "कल", "मच्छर", "सबसे ज़्यादा काटते हैं {t}", "{d} से आंधी-तूफ़ान आ रहा है · लगभग {m} मिनट में यहाँ", "दूर जा रहा है", "पास नहीं आ रहा", "{t} तक घर के अंदर रहें (30/30 नियम)"],
-  "bn": ["পিচ রাস্তা / থাবা", "হাঁটার জন্য ঠিক আছে", "গরম – অল্প হাঁটুন", "থাবার জন্য খুব গরম", "{t} থেকে হাঁটা যাবে", "বাইরে যাওয়ার সেরা সময়", "ভালো সময় নেই", "কাপড় শুকানো", "{t} পর্যন্ত শুকাবে", "সারাদিন শুকাবে", "বাইরে শুকাবে না", "আগামীকাল", "মশা", "সবচেয়ে বেশি কামড়ায় {t}", "{d} দিক থেকে বজ্রঝড় এগিয়ে আসছে · প্রায় {m} মিনিটে পৌঁছাবে", "দূরে সরে যাচ্ছে", "কাছে আসছে না", "{t} পর্যন্ত ঘরে থাকুন (30/30 নিয়ম)"],
-  "ne": ["पिच सडक / पन्जा", "हिँडाउन ठीक", "गर्मी – छोटो हिँडाइ", "पन्जाका लागि धेरै तातो", "{t} बाट हिँडाउनुहोस्", "बाहिर जाने उत्तम समय", "राम्रो समय छैन", "लुगा सुकाउने", "{t} सम्म सुक्छ", "दिनभर सुक्छ", "बाहिर सुक्दैन", "भोलि", "लामखुट्टे", "सबैभन्दा बढी टोक्ने {t}", "{d} बाट चट्याङसहितको आँधी नजिकिँदैछ · करिब {m} मिनेटमा यहाँ", "टाढा जाँदैछ", "नजिक आउँदैन", "{t} सम्म भित्रै बस्नुहोस् (30/30 नियम)"],
-  "si": ["තාර පාර / පාද", "ඇවිදීමට හොඳයි", "උණුසුම් – කෙටියෙන් ඇවිදින්න", "පාදවලට ඉතා උණුසුම්", "{t} සිට ඇවිදින්න", "එළියට යාමට හොඳම කාලය", "සුදුසු කාලයක් නැත", "රෙදි වියළීම", "{t} දක්වා වියළේ", "දවස පුරා වියළේ", "එළියේ වියළෙන්නේ නැත", "හෙට", "මදුරුවන්", "වැඩිම දෂ්ට කිරීම් {t}", "{d} දෙසින් ගිගුරුම් කුණාටුවක් ළං වෙයි · මිනි {m} කින් පමණ මෙහි", "ඈත් වෙමින්", "ළං නොවේ", "{t} දක්වා ඇතුළත සිටින්න (30/30 රීතිය)"],
-  "ta": ["தார் சாலை / பாதம்", "நடைக்கு ஏற்றது", "வெப்பம் – குறுகிய நடை", "பாதங்களுக்கு மிகவும் சூடு", "{t} முதல் நடை", "வெளியே செல்ல சிறந்த நேரம்", "நல்ல நேரம் இல்லை", "துணி காயவைத்தல்", "{t} வரை காயும்", "நாள் முழுவதும் காயும்", "வெளியே காயாது", "நாளை", "கொசுக்கள்", "அதிக கடி {t}", "{d} திசையிலிருந்து இடியுடன் கூடிய புயல் நெருங்குகிறது · சுமார் {m} நிமிடத்தில் இங்கே", "விலகிச் செல்கிறது", "நெருங்கவில்லை", "{t} வரை உள்ளே இருங்கள் (30/30 விதி)"],
+  "en": ["Asphalt / paws", "OK for walks", "Hot – keep walks short", "Too hot for paws", "walks from {t}", "Best time outside", "No good window", "Laundry", "dries until {t}", "dries all day", "won't dry outside", "tomorrow", "Mosquitoes", "most bites {t}", "Thunderstorm approaching from {d} · overhead in ~{m} min", "moving away", "not moving closer", "Stay indoors until {t} (30/30 rule)", "Peak biting time now", "next peak {t}"],
+  "de": ["Asphalt / Pfoten", "OK für Gassi", "Heiß – nur kurz raus", "Zu heiß für Pfoten", "Gassi ab {t}", "Beste Zeit draußen", "Kein gutes Fenster", "Wäsche", "trocknet bis {t}", "trocknet den ganzen Tag", "trocknet draußen nicht", "morgen", "Mücken", "meiste Stiche {t}", "Gewitter zieht aus {d} heran · in ca. {m} min hier", "zieht ab", "kommt nicht näher", "Drinnen bleiben bis {t} (30/30-Regel)", "Jetzt Hauptstechzeit", "nächste Stechzeit {t}"],
+  "th": ["ยางมะตอย / อุ้งเท้า", "พาเดินเล่นได้", "ร้อน – เดินสั้นๆ", "ร้อนเกินไปสำหรับอุ้งเท้า", "เดินเล่นได้ตั้งแต่ {t}", "ช่วงเวลาที่ดีที่สุดนอกบ้าน", "ไม่มีช่วงที่เหมาะ", "ตากผ้า", "แห้งได้ถึง {t}", "แห้งได้ทั้งวัน", "ตากข้างนอกไม่แห้ง", "พรุ่งนี้", "ยุง", "ยุงกัดมากช่วง {t}", "พายุฝนฟ้าคะนองกำลังเข้ามาจากทิศ {d} · ถึงในราว {m} นาที", "กำลังเคลื่อนออกไป", "ไม่ได้เข้าใกล้", "อยู่ในอาคารจนถึง {t} (กฎ 30/30)", "ตอนนี้ยุงกัดมาก", "ช่วงยุงกัดถัดไป {t}"],
+  "vi": ["Mặt đường / chân thú cưng", "Đi dạo được", "Nóng – chỉ đi ngắn", "Quá nóng cho chân", "đi dạo từ {t}", "Thời điểm ra ngoài tốt nhất", "Không có khung giờ tốt", "Phơi đồ", "khô đến {t}", "khô cả ngày", "phơi ngoài không khô", "ngày mai", "Muỗi", "đốt nhiều nhất {t}", "Dông đang đến từ hướng {d} · tới đây sau ~{m} phút", "đang đi xa", "không tiến lại gần", "Ở trong nhà đến {t} (quy tắc 30/30)", "Đang là giờ muỗi đốt nhiều", "đợt đốt tiếp theo {t}"],
+  "id": ["Aspal / kaki hewan", "Aman untuk jalan-jalan", "Panas – jalan singkat saja", "Terlalu panas untuk kaki", "jalan-jalan mulai {t}", "Waktu terbaik di luar", "Tidak ada waktu yang baik", "Jemuran", "kering sampai {t}", "kering seharian", "tidak akan kering di luar", "besok", "Nyamuk", "paling banyak gigitan {t}", "Badai petir mendekat dari {d} · tiba dalam ~{m} mnt", "menjauh", "tidak mendekat", "Tetap di dalam sampai {t} (aturan 30/30)", "Sekarang puncak gigitan", "puncak berikutnya {t}"],
+  "ms": ["Asfalt / tapak kaki", "Selamat untuk berjalan", "Panas – jalan sekejap", "Terlalu panas untuk tapak kaki", "berjalan dari {t}", "Masa terbaik di luar", "Tiada masa yang sesuai", "Jemuran", "kering hingga {t}", "kering sepanjang hari", "tidak akan kering di luar", "esok", "Nyamuk", "paling banyak gigitan {t}", "Ribut petir menghampiri dari {d} · tiba dalam ~{m} min", "semakin menjauh", "tidak menghampiri", "Kekal di dalam hingga {t} (peraturan 30/30)", "Kini waktu puncak gigitan", "puncak seterusnya {t}"],
+  "fil": ["Aspalto / paa", "Okay maglakad", "Mainit – saglit lang", "Masyadong mainit para sa paa", "lakad mula {t}", "Pinakamagandang oras sa labas", "Walang magandang oras", "Sampay", "tuyo hanggang {t}", "tuyo buong araw", "hindi matutuyo sa labas", "bukas", "Lamok", "pinakamaraming kagat {t}", "Paparating ang kulog at kidlat mula {d} · nandito sa ~{m} min", "papalayo", "hindi lumalapit", "Manatili sa loob hanggang {t} (30/30 rule)", "Rurok ng kagat ngayon", "susunod na rurok {t}"],
+  "km": ["កៅស៊ូផ្លូវ / ជើងសត្វ", "ដើរលេងបាន", "ក្ដៅ – ដើរខ្លីៗ", "ក្ដៅពេកសម្រាប់ជើងសត្វ", "ដើរលេងចាប់ពី {t}", "ពេលល្អបំផុតនៅខាងក្រៅ", "គ្មានពេលល្អ", "ហាលខោអាវ", "ស្ងួតដល់ {t}", "ស្ងួតពេញមួយថ្ងៃ", "ហាលខាងក្រៅមិនស្ងួត", "ថ្ងៃស្អែក", "មូស", "ខាំច្រើនបំផុត {t}", "ផ្គររន្ទះកំពុងមកពីទិស {d} · មកដល់ប្រហែល {m} នាទី", "កំពុងរសាត់ចេញ", "មិនខិតមកជិត", "នៅក្នុងផ្ទះរហូតដល់ {t} (ច្បាប់ 30/30)", "ឥឡូវជាពេលមូសខាំខ្លាំង", "ពេលខាំខ្លាំងបន្ទាប់ {t}"],
+  "lo": ["ຢາງປູທາງ / ຕີນສັດ", "ພາຍ່າງຫຼິ້ນໄດ້", "ຮ້ອນ – ຍ່າງສັ້ນໆ", "ຮ້ອນເກີນໄປສຳລັບຕີນ", "ຍ່າງຫຼິ້ນໄດ້ຕັ້ງແຕ່ {t}", "ເວລາທີ່ດີທີ່ສຸດຢູ່ນອກ", "ບໍ່ມີຊ່ວງທີ່ເໝາະ", "ຕາກເຄື່ອງ", "ແຫ້ງໄດ້ຮອດ {t}", "ແຫ້ງໄດ້ໝົດມື້", "ຕາກຂ້າງນອກບໍ່ແຫ້ງ", "ມື້ອື່ນ", "ຍຸງ", "ກັດຫຼາຍສຸດ {t}", "ພາຍຸຟ້າຮ້ອງກຳລັງມາຈາກທິດ {d} · ຮອດປະມານ {m} ນາທີ", "ກຳລັງເຄື່ອນອອກໄປ", "ບໍ່ໄດ້ເຂົ້າໃກ້", "ຢູ່ໃນເຮືອນຈົນຮອດ {t} (ກົດ 30/30)", "ຕອນນີ້ຍຸງກັດຫຼາຍ", "ຊ່ວງຍຸງກັດຕໍ່ໄປ {t}"],
+  "my": ["ကတ္တရာလမ်း / ခြေဖဝါး", "လမ်းလျှောက်ရန် အဆင်ပြေ", "ပူ – ခဏသာ လျှောက်ပါ", "ခြေဖဝါးအတွက် အလွန်ပူ", "{t} မှ လမ်းလျှောက်နိုင်", "အပြင်ထွက်ရန် အကောင်းဆုံးအချိန်", "သင့်တော်သောအချိန် မရှိ", "အဝတ်လှန်း", "{t} အထိ ခြောက်မည်", "တစ်နေကုန် ခြောက်မည်", "အပြင်တွင် မခြောက်ပါ", "မနက်ဖြန်", "ခြင်", "{t} တွင် အကိုက်အများဆုံး", "{d} မှ မိုးကြိုးမုန်တိုင်း လာနေသည် · ~{m} မိနစ်အတွင်း ရောက်မည်", "ဝေးသွားနေသည်", "နီးမလာပါ", "{t} အထိ အိမ်ထဲတွင်နေပါ (30/30 စည်းမျဉ်း)", "ယခု ခြင်ကိုက်အများဆုံးအချိန်", "နောက်ကိုက်ချိန် {t}"],
+  "zh-Hans": ["沥青 / 爪垫", "适合遛狗", "炎热 – 短时散步", "对爪垫太烫", "{t} 起可遛狗", "最佳户外时段", "没有合适时段", "晾衣", "可晾干至 {t}", "全天可晾干", "户外晾不干", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正从{d}方向逼近 · 约 {m} 分钟后到达", "正在远离", "未靠近", "请待在室内至 {t}（30/30 规则）", "现在是叮咬高峰", "下次高峰 {t}"],
+  "zh-Hant": ["瀝青 / 腳掌", "適合遛狗", "炎熱 – 短時散步", "對腳掌太燙", "{t} 起可遛狗", "最佳戶外時段", "沒有合適時段", "晾衣", "可晾乾至 {t}", "全天可晾乾", "戶外晾不乾", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正從{d}方向逼近 · 約 {m} 分鐘後到達", "正在遠離", "未靠近", "請待在室內至 {t}（30/30 規則）", "現在是叮咬高峰", "下次高峰 {t}"],
+  "ja": ["路面 / 肉球", "散歩OK", "暑い – 短めに", "肉球には熱すぎ", "{t} から散歩可", "外出のベストタイム", "適した時間なし", "洗濯物", "{t} まで乾く", "一日中乾く", "外では乾かない", "明日", "蚊", "刺されやすい時間 {t}", "雷雨が{d}から接近中 · 約 {m} 分で到達", "遠ざかっています", "接近していません", "{t} まで屋内に（30/30ルール）", "今が刺されやすい時間", "次のピーク {t}"],
+  "ko": ["아스팔트 / 발바닥", "산책 가능", "더움 – 짧게 산책", "발바닥에 너무 뜨거움", "{t}부터 산책 가능", "외출하기 좋은 시간", "적당한 시간 없음", "빨래", "{t}까지 마름", "하루 종일 마름", "밖에서는 안 마름", "내일", "모기", "물림 최다 {t}", "뇌우가 {d} 방향에서 접근 중 · 약 {m}분 후 도달", "멀어지는 중", "접근하지 않음", "{t}까지 실내에 머무르세요 (30/30 규칙)", "지금 물림 최다 시간", "다음 최다 시간 {t}"],
+  "hi": ["डामर / पंजे", "टहलने के लिए ठीक", "गर्म – छोटी सैर", "पंजों के लिए बहुत गर्म", "{t} से टहलें", "बाहर जाने का सबसे अच्छा समय", "कोई अच्छा समय नहीं", "कपड़े सुखाना", "{t} तक सूखेंगे", "पूरे दिन सूखेंगे", "बाहर नहीं सूखेंगे", "कल", "मच्छर", "सबसे ज़्यादा काटते हैं {t}", "{d} से आंधी-तूफ़ान आ रहा है · लगभग {m} मिनट में यहाँ", "दूर जा रहा है", "पास नहीं आ रहा", "{t} तक घर के अंदर रहें (30/30 नियम)", "अभी काटने का चरम समय", "अगला चरम समय {t}"],
+  "bn": ["পিচ রাস্তা / থাবা", "হাঁটার জন্য ঠিক আছে", "গরম – অল্প হাঁটুন", "থাবার জন্য খুব গরম", "{t} থেকে হাঁটা যাবে", "বাইরে যাওয়ার সেরা সময়", "ভালো সময় নেই", "কাপড় শুকানো", "{t} পর্যন্ত শুকাবে", "সারাদিন শুকাবে", "বাইরে শুকাবে না", "আগামীকাল", "মশা", "সবচেয়ে বেশি কামড়ায় {t}", "{d} দিক থেকে বজ্রঝড় এগিয়ে আসছে · প্রায় {m} মিনিটে পৌঁছাবে", "দূরে সরে যাচ্ছে", "কাছে আসছে না", "{t} পর্যন্ত ঘরে থাকুন (30/30 নিয়ম)", "এখন কামড়ের সর্বোচ্চ সময়", "পরবর্তী সর্বোচ্চ সময় {t}"],
+  "ne": ["पिच सडक / पन्जा", "हिँडाउन ठीक", "गर्मी – छोटो हिँडाइ", "पन्जाका लागि धेरै तातो", "{t} बाट हिँडाउनुहोस्", "बाहिर जाने उत्तम समय", "राम्रो समय छैन", "लुगा सुकाउने", "{t} सम्म सुक्छ", "दिनभर सुक्छ", "बाहिर सुक्दैन", "भोलि", "लामखुट्टे", "सबैभन्दा बढी टोक्ने {t}", "{d} बाट चट्याङसहितको आँधी नजिकिँदैछ · करिब {m} मिनेटमा यहाँ", "टाढा जाँदैछ", "नजिक आउँदैन", "{t} सम्म भित्रै बस्नुहोस् (30/30 नियम)", "अहिले टोक्ने चरम समय", "अर्को चरम समय {t}"],
+  "si": ["තාර පාර / පාද", "ඇවිදීමට හොඳයි", "උණුසුම් – කෙටියෙන් ඇවිදින්න", "පාදවලට ඉතා උණුසුම්", "{t} සිට ඇවිදින්න", "එළියට යාමට හොඳම කාලය", "සුදුසු කාලයක් නැත", "රෙදි වියළීම", "{t} දක්වා වියළේ", "දවස පුරා වියළේ", "එළියේ වියළෙන්නේ නැත", "හෙට", "මදුරුවන්", "වැඩිම දෂ්ට කිරීම් {t}", "{d} දෙසින් ගිගුරුම් කුණාටුවක් ළං වෙයි · මිනි {m} කින් පමණ මෙහි", "ඈත් වෙමින්", "ළං නොවේ", "{t} දක්වා ඇතුළත සිටින්න (30/30 රීතිය)", "දැන් දෂ්ට කිරීම් වැඩිම කාලය", "ඊළඟ උපරිම කාලය {t}"],
+  "ta": ["தார் சாலை / பாதம்", "நடைக்கு ஏற்றது", "வெப்பம் – குறுகிய நடை", "பாதங்களுக்கு மிகவும் சூடு", "{t} முதல் நடை", "வெளியே செல்ல சிறந்த நேரம்", "நல்ல நேரம் இல்லை", "துணி காயவைத்தல்", "{t} வரை காயும்", "நாள் முழுவதும் காயும்", "வெளியே காயாது", "நாளை", "கொசுக்கள்", "அதிக கடி {t}", "{d} திசையிலிருந்து இடியுடன் கூடிய புயல் நெருங்குகிறது · சுமார் {m} நிமிடத்தில் இங்கே", "விலகிச் செல்கிறது", "நெருங்கவில்லை", "{t} வரை உள்ளே இருங்கள் (30/30 விதி)", "இப்போது அதிக கடி நேரம்", "அடுத்த உச்ச நேரம் {t}"],
 };
 
 // expand the compact source into nested key objects: I18N.th.cond["cloudy"], I18N.th.heat.normal, I18N.th.feels_like ...
@@ -598,7 +598,7 @@ class TropicalWeatherCard extends HTMLElement {
       const t = Date.parse(x.datetime), elev = sunElevation(t + 1800000, lat, lon);
       const g = irradiance(elev, num(x.cloud_coverage));
       return { t, elev, g, pp: num(x.precipitation_probability) || 0, mm: num(x.precipitation) || 0, rh: num(x.humidity), app: num(x.apparent_temperature) ?? num(x.temperature),
-        temp: num(x.temperature), wind: num(x.wind_speed) || 0, storm: String(x.condition).startsWith("lightning"),
+        temp: num(x.temperature), wind: num(x.wind_speed) || 0, uv: num(x.uv_index), storm: String(x.condition).startsWith("lightning"),
         asph: asphaltTemp(num(x.temperature) ?? 28, g, num(x.wind_speed) || 0) };
     });
     const tiles = [];
@@ -614,7 +614,9 @@ class TropicalWeatherCard extends HTMLElement {
 
     // 2) best time outside: dry, below the hot band, no thunder, 05-22 h local
     // from civil dawn (sun above -6 deg) until 22 h local
-    const good = rows.slice(0, 20).filter((r) => { const lh = this._localHour(r.t); return sunElevation(r.t, lat, lon) > -6 && lh <= 21 && lh >= 4 && r.pp < 30 && !r.storm && (r.app ?? 99) < hot; });
+    // comfortable outside: after dawn, until 22 h, dry, no thunder, UV below "high" and feels-like a step below the hot band
+    const comfy = hot - 3;
+    const good = rows.slice(0, 30).filter((r) => { const lh = this._localHour(r.t); return sunElevation(r.t, lat, lon) > -6 && lh <= 21 && lh >= 4 && r.pp < 30 && !r.storm && (r.app ?? 99) < comfy && (r.uv ?? 0) < 6; });
     const wins = [];
     for (const r of good) {
       const w = wins[wins.length - 1];
@@ -622,9 +624,12 @@ class TropicalWeatherCard extends HTMLElement {
     }
     const dayKey = (t) => new Intl.DateTimeFormat("en-CA", { timeZone: this._tz() }).format(new Date(t));
     const today = dayKey(Date.now());
-    const fmtW = (w) => `${dayKey(w.start) !== today ? T("tomorrow") + " " : ""}${w.start <= Date.now() ? T("now") : this._hh(w.start)}–${this._hh(w.end + 3600000)}`;
-    const shown = wins.slice(0, 2);
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:walk"></ha-icon>${T("best_time")}</span><b class="sm">${shown.length ? fmtW(shown[0]) : "–"}</b><span class="ts">${shown.length > 1 ? fmtW(shown[1]) : (shown.length ? "&nbsp;" : T("none_today"))}</span></div>`);
+    const cap = (x) => String(x).charAt(0).toUpperCase() + String(x).slice(1);
+    const dayOf = (w) => cap(dayKey(w.start) === today ? T("today") : T("tomorrow"));
+    const span = (w) => `${w.start <= Date.now() ? T("now") : this._hh(w.start)}–${this._hh(w.end + 3600000)}`;
+    const w1 = wins[0], w2 = wins[1];
+    const bestSub = w1 ? dayOf(w1) + (w2 ? ` · + ${dayOf(w2) !== dayOf(w1) ? dayOf(w2) + " " : ""}${span(w2)}` : "") : T("none_today");
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:walk"></ha-icon>${T("best_time")}</span><b class="sm">${w1 ? span(w1) : "–"}</b><span class="ts">${bestSub}</span></div>`);
 
     // 3) laundry: daylight hours (sun > 12 deg) without rain from now, or tomorrow when it is dark
     const isDay = (r) => r.elev > 12;
@@ -647,9 +652,19 @@ class TropicalWeatherCard extends HTMLElement {
     let sc = tm >= 26 && tm <= 32 ? 2 : tm >= 22 && tm <= 35 ? 1 : 0;
     sc += rh >= 70 ? 1 : 0; sc += rain48 >= 20 ? 2 : rain48 >= 5 ? 1 : 0;
     const ml = sc >= 4 ? ["uv.high", "#f44336"] : sc >= 2 ? ["uv.moderate", "#ffc107"] : ["uv.low", "#4caf50"];
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? T("bites", { t: "06–08 · 16–18" }) : "&nbsp;"}</span></div>`);
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText() : "&nbsp;"}</span></div>`);
 
     return `<div class="tiles ins-row">${tiles.join("")}</div>`;
+  }
+
+  // Aedes biting peaks: early morning and late afternoon (local time)
+  _biteText() {
+    const lh = this._localHour(Date.now());
+    const P = [[6, 8], [16, 18]];
+    if (P.some(([a, b]) => lh >= a && lh < b)) return T("bites_now");
+    const nx = P.find(([a]) => lh < a);
+    const f = ([a, b]) => `${String(a).padStart(2, "0")}–${String(b).padStart(2, "0")}`;
+    return T("next_peak", { t: nx ? f(nx) : `${T("tomorrow")} ${f(P[0])}` });
   }
 
   _lightning() {
