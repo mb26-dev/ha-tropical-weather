@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.0.3";
+const TWC_VERSION = "1.0.4";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -466,7 +466,7 @@ class TropicalWeatherCard extends HTMLElement {
   set hass(hass) {
     const first = !this._hass;
     this._hass = hass;
-    if (first || this._subscribedTo !== this._config.weather) this._subscribe();
+    if (first || this._subscribedTo !== this._activeWeather()) this._subscribe();
     const c = this._config;
     const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust].filter(Boolean);
     if (this._radarEl) this._radarEl.hass = hass;
@@ -492,9 +492,11 @@ class TropicalWeatherCard extends HTMLElement {
   _subscribe() {
     if (!this._hass || !this._hass.connection) return;
     this._unsubscribe();
-    this._subscribedTo = this._config.weather;
+    const wid = this._activeWeather();
+    this._subscribedTo = wid;
+    this._hourly = null; this._daily = null;
     const sub = (type, cb) => this._hass.connection.subscribeMessage((ev) => { cb(ev.forecast || []); this._render(); },
-      { type: "weather/subscribe_forecast", forecast_type: type, entity_id: this._config.weather });
+      { type: "weather/subscribe_forecast", forecast_type: type, entity_id: wid });
     this._subs.push(sub("hourly", (f) => { this._hourly = f; }).catch(() => null));
     this._subs.push(sub("daily", (f) => { this._daily = f; }).catch(() => null));
   }
@@ -527,6 +529,14 @@ class TropicalWeatherCard extends HTMLElement {
   }
   _heatFrom() { return HEAT_BANDS[this._zone()][1][0]; }
 
+  // main weather entity, or the first working one from sources when it is unavailable
+  _activeWeather() {
+    const ok = (id) => { const st = this._hass && this._hass.states[id]; return st && !["unavailable", "unknown"].includes(st.state); };
+    const c = this._config;
+    if (ok(c.weather)) return c.weather;
+    return (c.sources || []).find(ok) || c.weather;
+  }
+
   _num(id) { const s = this._state(id); return s ? num(s.state) : null; }
 
   _localPressure() {
@@ -534,7 +544,7 @@ class TropicalWeatherCard extends HTMLElement {
     const p = this._num(this._config.pressure);
     if (p === null) return null;
     const h = num(this._config.elevation) ?? num(this._hass.config && this._hass.config.elevation) ?? 0;
-    const t = this._num(this._config.temperature) ?? this._attr(this._config.weather, "temperature") ?? 15;
+    const t = this._num(this._config.temperature) ?? this._attr(this._activeWeather(), "temperature") ?? 15;
     const msl = h > 0 ? p * Math.pow(1 - (0.0065 * h) / (t + 0.0065 * h + 273.15), -5.257) : p;
     return msl + (num(this._config.pressure_offset) || 0);
   }
@@ -592,7 +602,7 @@ class TropicalWeatherCard extends HTMLElement {
     const h = this._ahead(30);
     if (h.length < 6) return "";
     const { lat, lon } = this._geo();
-    const a = this._state(this._config.weather).attributes;
+    const a = this._state(this._activeWeather()).attributes;
     const hot = this._heatFrom();
     const rows = h.map((x) => {
       const t = Date.parse(x.datetime), elev = sunElevation(t + 1800000, lat, lon);
@@ -896,7 +906,7 @@ class TropicalWeatherCard extends HTMLElement {
 
   _gust() {
     const g = this._num(this._config.wind_gust);
-    return g !== null ? g : this._attr(this._config.weather, "wind_gust_speed");
+    return g !== null ? g : this._attr(this._activeWeather(), "wind_gust_speed");
   }
 
   _colsFor(w) { return !w ? 5 : w < 520 ? 3 : w < 660 ? 4 : 5; }
@@ -1009,7 +1019,8 @@ class TropicalWeatherCard extends HTMLElement {
     if (!this._hass || !this._config) return;
     LANG = this._lang();
     const c = this._config;
-    const w = this._state(c.weather);
+    const wid = this._activeWeather();
+    const w = this._state(wid);
     if (!w) { this._root = null; this._skyKey = null; this.shadowRoot.innerHTML = `<ha-card style="padding:16px">${T("entity_missing", { e: c.weather })}</ha-card>`; return; }
     const a = w.attributes;
     const sun = this._sunInfo();
@@ -1073,7 +1084,7 @@ class TropicalWeatherCard extends HTMLElement {
     }
     this._root.overlay.innerHTML = `
         <div class="htop">
-          <div class="hl">${this._icon(heroIcon, 64)}<div><div class="place">${name}</div><div class="cond">${T("cond." + (heroIcon !== cond && heroIcon.startsWith("tropical") ? heroIcon : cond))}</div></div></div>
+          <div class="hl">${this._icon(heroIcon, 64)}<div><div class="place">${name}</div><div class="cond">${((k) => { const v = T("cond." + k); return v.startsWith("cond.") ? k : v; })(heroIcon !== cond && heroIcon.startsWith("tropical") ? heroIcon : cond)}</div>${wid !== c.weather ? `<div class="fb">↺ ${(w.attributes && w.attributes.friendly_name) || wid}</div>` : ""}</div></div>
           <div class="sunbox">${sun.up ? "☀︎ ↓" : "☀︎ ↑"} ${this._fmtTime(new Date(sun.up ? sun.set : sun.rise))}<br><span>${dl}</span></div>
         </div>
         <div class="hbot">
@@ -1175,6 +1186,7 @@ TropicalWeatherCard.styles = `
   .rng i { position: relative; width: 74px; height: 5px; border-radius: 3px; background: linear-gradient(90deg, #4fc3f7, #ffca28, #ff7043); }
   .rng b { position: absolute; top: 50%; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(20,20,22,.8), 0 0 6px rgba(255,255,255,.7); }
   .msr { font-size: 11px; color: var(--gold); margin-top: 2px; }
+  .fb { font-size: 11px; opacity: .75; margin-top: 2px; }
   .hhum { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
   .hhum b { font-weight: 600; }
   .hhum .gold { font-size: 9px; }
