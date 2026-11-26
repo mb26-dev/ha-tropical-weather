@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.3.0";
+const TWC_VERSION = "1.4.0";
 
 /*__I18N__*/
 let LANG = "en";
@@ -224,6 +224,7 @@ class TropicalWeatherCard extends HTMLElement {
       alert_max_age: 24,
       rain_consensus: true,
       observed_condition: null,
+      dengue: null,
       observed_max_age: 45,
     }, config);
     if (typeof this._config.alerts === "string") this._config.alerts = [this._config.alerts];
@@ -239,7 +240,7 @@ class TropicalWeatherCard extends HTMLElement {
     this._hass = hass;
     if (first || this._subscribedTo !== this._subKey()) this._subscribe();
     const c = this._config;
-    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust, c.observed_condition, ...this._alertIds()].filter(Boolean);
+    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust, c.observed_condition, c.dengue, ...this._alertIds()].filter(Boolean);
     if (this._radarEl) this._radarEl.hass = hass;
     this._trackLightning(first);
     const key = ids.map((id) => { const s = hass.states[id]; return s ? s.last_updated + s.state : "x"; }).join("|");
@@ -316,6 +317,17 @@ class TropicalWeatherCard extends HTMLElement {
     const obs = this._isNowHour(x) && this._observed();
     if (obs) return { ...res, votes: obs.wet ? res.n : 0, frac: obs.wet ? 1 : 0, mm: obs.wet ? Math.max(res.mm, obs.cond === "pouring" ? 5 : 1) : 0, thunder: obs.wet && res.thunder, observed: true };
     return res;
+  }
+
+  // dengue situation from a Dengue Watch Thailand level sensor (or any sensor with low/normal/elevated/high)
+  _dengueLine() {
+    const st = this._state(this._config.dengue);
+    if (!st || !["low", "normal", "elevated", "high"].includes(st.state)) return "";
+    const col = { low: "#4fc3f7", normal: "#4caf50", elevated: "#ffc107", high: "#f44336" }[st.state];
+    const n = num(st.attributes.cases_last_4_weeks);
+    const exp = num(st.attributes.expected_last_4_weeks);
+    const tip = n !== null && exp !== null ? ` title="${n} / ${exp}"` : "";
+    return `<span class="ts dgl" style="color:${col}"${tip}><ha-icon icon="mdi:mosquito"></ha-icon>${T("dengue", { l: T("dg_" + st.state), n: n ?? "–" })}</span>`;
   }
 
   // probability used by the day insights: share of models expecting rain when several models are there
@@ -496,7 +508,7 @@ class TropicalWeatherCard extends HTMLElement {
     let sc = tm >= 26 && tm <= 32 ? 2 : tm >= 22 && tm <= 35 ? 1 : 0;
     sc += rh >= 70 ? 1 : 0; sc += rain48 >= 20 ? 2 : rain48 >= 5 ? 1 : 0;
     const ml = sc >= 4 ? ["uv.high", "#f44336"] : sc >= 2 ? ["uv.moderate", "#ffc107"] : ["uv.low", "#4caf50"];
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText() : "&nbsp;"}</span></div>`);
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText() : "&nbsp;"}</span>${this._dengueLine()}</div>`);
 
     return `<div class="tiles ins-row">${tiles.join("")}</div>`;
   }
@@ -1188,6 +1200,8 @@ TropicalWeatherCard.styles = `
   .hhum { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
   .hhum b { font-weight: 600; }
   .hhum .gold { font-size: 9px; }
+  .tile .dgl { display: flex; align-items: center; gap: 3px; margin-top: 2px; font-size: 11px; opacity: 1; }
+  .tile .dgl ha-icon { --mdc-icon-size: 13px; }
   .cond .odot { font-size: 10px; vertical-align: middle; }
   .temp .tdot { font-size: 9px; vertical-align: top; margin-left: 3px; opacity: 1; }
   .wg { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 4px; }

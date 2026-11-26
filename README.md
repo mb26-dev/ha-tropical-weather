@@ -56,7 +56,7 @@ Most weather cards are made for four seasons. In the tropics the questions are d
 - **Asphalt / paws** – estimated road surface temperature from air temperature, solar radiation and wind. Red above 52 °C (paw burns within a minute) with the time it is safe to walk again.
 - **Best time outside** – the dry, cooler windows of the next hours, from dawn on, without thunderstorms.
 - **Laundry** – does it dry outside today, until when, or not at all.
-- **Mosquitoes** – Aedes (dengue) risk from temperature, humidity and recent and coming rain, with the peak biting times.
+- **Mosquitoes** – Aedes (dengue) risk from temperature, humidity and recent and coming rain, with the peak biting times. Optionally the real dengue situation in your province from Thailand's national disease surveillance ([Dengue Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch)).
 
 **Official warnings**
 - **Warning banner** – shows the warnings of your national weather service on top of the card, coloured by severity (advisory, moderate, severe, extreme), with validity, instructions and a link to the bulletin. Works with CAP alert sensors (e.g. the [CAP Alerts](https://github.com/seevee/cap_alerts) integration with its WMO source, which includes TMD and many other national weather services), Meteoalarm, feedreader events and any sensor with a warning text. Filter it to your province or region with `alert_areas`.
@@ -127,6 +127,7 @@ lightning_counter: sensor.home_lightning_counter
 lightning_azimuth: sensor.home_lightning_azimuth
 cyclone: sensor.nearest_tropical_cyclone
 observed_condition: input_select.sky_check   # what a camera sees right now
+dengue: sensor.dengue_krabi_level            # Dengue Watch Thailand
 alerts:                       # official warnings banner
   - auto                      # every CAP alert sensor
   - event.latest_alerts_from_thai_meteorological_department_tmd
@@ -158,6 +159,7 @@ radar_card:
 | `rain_consensus` | `true` | The rain outlook, laundry and best-time tiles ask every weather entity in `sources`, not only the main one. A model counts as "rain" with a probability of 50 % or more, or with 0.3 mm or more when it gives no probability. The outlook shows how many models agree; the laundry tile only counts an hour as wet when more than half of the models agree. |
 | `observed_condition` | – | An entity whose state is a weather condition seen right now (`sunny`, `partlycloudy`, `cloudy`, `rainy`, `pouring`, ...), for example an `input_select` filled from your outdoor cameras. For the current hour it overrules every model: hero condition (gold ● marker), rain outlook, laundry and best time. `unknown` or an old value is ignored. See [Observed weather from cameras](#observed-weather-from-cameras). |
 | `observed_max_age` | `45` | Minutes after which `observed_condition` counts as outdated. |
+| `dengue` | – | Level sensor of [Dengue Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch). The mosquito tile then also shows the dengue situation in your province: *below normal*, *normal*, *elevated* or *high*, with the cases of the last 4 weeks. |
 | `alerts` | – | Warning entities for the banner. `auto` adds every CAP alert sensor (an entity with `severity` and `geocodes` or `identifier`). Also accepts event entities (feedreader), Meteoalarm and plain sensors whose state is the warning. |
 | `alert_areas` | – | Only show warnings whose `geocodes` or area description contain one of these codes or names (e.g. `TH-81`, `Krabi`). Warnings without area information are always shown. |
 | `alert_min_severity` | `minor` | Lowest severity shown: `minor`, `moderate`, `severe` or `extreme`. Warnings without a severity count as `minor`. |
@@ -267,6 +269,7 @@ Codes: `en de th vi id ms fil km lo my zh-Hans zh-Hant ja ko hi bn ne si ta`. Co
 - **Solar radiation** (when no sensor is set): sun elevation from your coordinates, a clear-sky model (Haurwitz) and the forecast cloud cover (Kasten–Czeplak).
 - **Storm approach**: a linear fit of the strike distances of the last 40 minutes. At least three strikes over six minutes are needed.
 - **Laundry**: daylight hours (sun above 12°) without rain and below 92 % humidity. The current hour uses your own `humidity` sensor. Drying time depends on humidity: about 1.5 h below 65 %, 2.5 h below 80 %, otherwise 4 h. ✓ = enough time, ≈ = short window or rain close, ✗ = raining, dark or too humid.
+- **Dengue** (with the `dengue` option): reported cases of the last 4 weeks against the 5-year median of the same weeks, from the Report 506 surveillance of the Department of Disease Control.
 - **Mosquito risk**: a simple index of mean temperature (26–32 °C is ideal for Aedes), humidity and rain in the next two days. It shows conditions, not actual mosquito counts.
 
 ## Development
