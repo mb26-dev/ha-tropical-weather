@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.5.2";
+const TWC_VERSION = "1.5.3";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -267,12 +267,15 @@ function resolveLang(l) {
   return I18N[b] ? b : "en";
 }
 // T("group.key", {var}) - current language, English fallback, {name} placeholders
+// values put into a translation are escaped; text that is already markup-safe (another translation) is wrapped in trusted()
+class Trusted { constructor(v) { this.v = String(v); } }
+const trusted = (v) => new Trusted(v);
 function T(key, vars) {
   const get = (d) => key.split(".").reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), d);
   let v = get(I18N[LANG]);
   if (v === undefined) v = get(I18N.en);
   if (v === undefined) return key;
-  if (vars) for (const k in vars) v = String(v).split("{" + k + "}").join(vars[k]);
+  if (vars) for (const k in vars) v = String(v).split("{" + k + "}").join(vars[k] instanceof Trusted ? vars[k].v : esc(vars[k]));
   return v;
 }
 const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
@@ -435,6 +438,11 @@ class TropicalWeatherCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    // night icons missing from a custom asset pack fall back to the day icon (error events do not bubble, so capture)
+    this.shadowRoot.addEventListener("error", (e) => {
+      const el = e.target;
+      if (el && el.tagName === "IMG" && el.dataset && el.dataset.fb) { const fb = el.dataset.fb; delete el.dataset.fb; el.src = fb; }
+    }, true);
     this._tab = "hourly";
     this._hourly = null;
     this._daily = null;
@@ -489,6 +497,9 @@ class TropicalWeatherCard extends HTMLElement {
     if (typeof this._config.alerts === "string") this._config.alerts = [this._config.alerts];
     if (typeof this._config.alert_areas === "string") this._config.alert_areas = [this._config.alert_areas];
     if (!this._config.sources.includes(this._config.weather)) this._config.sources.unshift(this._config.weather);
+    const ap = this._config.asset_path;
+    if (ap != null && !/^[A-Za-z0-9_\-./~%]+$/.test(String(ap))) throw new Error("asset_path: use a plain path such as /local/tropical-weather/photoreal");
+    if (ap) this._config.asset_path = String(ap).replace(/\/+$/, "");
     this._lastKey = "";
   }
 
@@ -587,7 +598,7 @@ class TropicalWeatherCard extends HTMLElement {
     const exp = num(st.attributes.expected_last_4_weeks);
     const tip = n !== null && exp !== null ? ` title="${n} / ${exp}"` : "";
     const prov = (LANG === "th" && st.attributes.province_th) || st.attributes.province || "";
-    const text = T("dengue", { p: prov, l: T("dg_" + st.state), n: n ?? "–" }).replace(/ +([:：])/, "$1");
+    const text = T("dengue", { p: prov, l: trusted(T("dg_" + st.state)), n: n ?? "–" }).replace(/ +([:：])/, "$1");
     return `<span class="ts dgl" style="color:${col}"${tip}>${text}</span>`;
   }
 
@@ -601,7 +612,10 @@ class TropicalWeatherCard extends HTMLElement {
   // asset_path: folder under /local with icons/<key>.svg and backgrounds/bg-<key>.svg (e.g. a photorealistic pack); built-in vector pack otherwise
   _iconUrl(name) { const p = this._config.asset_path; return p ? `${p}/icons/${WX_ICONS[name] ? name : "partlycloudy"}.svg?v=${TWC_VERSION}` : iconUrl(name); }
   _bgUrl(name) { const p = this._config.asset_path; return p ? `${p}/backgrounds/bg-${WX_BG[name] ? name : "partlycloudy"}.svg?v=${TWC_VERSION}` : bgUrl(name); }
-  _icon(name, size = 28) { const fb = NIGHT_FALLBACK[name] && this._config.asset_path ? ` onerror="this.onerror=null;this.src='${this._iconUrl(NIGHT_FALLBACK[name])}'"` : ""; return `<img class="wxi" src="${this._iconUrl(name)}" width="${size}" height="${size}" alt=""${fb}>`; }
+  _icon(name, size = 28) {
+    const fb = NIGHT_FALLBACK[name] && this._config.asset_path ? ` data-fb="${esc(this._iconUrl(NIGHT_FALLBACK[name]))}"` : "";
+    return `<img class="wxi" src="${esc(this._iconUrl(name))}" width="${size}" height="${size}" alt=""${fb}>`;
+  }
   _tz() { return (this._hass && this._hass.config && this._hass.config.time_zone) || undefined; }
   _fmtTime(d) { return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: this._tz() }).format(d); }
   _fmtHour(d) { return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: this._tz() }).format(d).replace(/\D/g, "") + ":00"; }
@@ -781,7 +795,7 @@ class TropicalWeatherCard extends HTMLElement {
     if (P.some(([a, b]) => lh >= a && lh < b)) return T("bites_now");
     const nx = P.find(([a]) => lh < a);
     const f = ([a, b]) => `${String(a).padStart(2, "0")}–${String(b).padStart(2, "0")}`;
-    return T("next_peak", { t: nx ? f(nx) : `${T("tomorrow")} ${f(P[0])}` });
+    return T("next_peak", { t: trusted(nx ? f(nx) : `${T("tomorrow")} ${f(P[0])}`) });
   }
 
   _lightning() {
@@ -1055,7 +1069,7 @@ class TropicalWeatherCard extends HTMLElement {
         lanes[x.lane].push(x.p);
       });
       const deep = sorted.some((x) => x.lane === "low");
-      const dots = sorted.map((x) => `<span class="dot${x.lane === "below" ? "" : " " + x.lane}" style="left:${x.p}%" title="${x.n}: ${x.v.toFixed(m.dec)}${m.unit}"><i>${x.n}</i></span>`).join("")
+      const dots = sorted.map((x) => `<span class="dot${x.lane === "below" ? "" : " " + x.lane}" style="left:${x.p}%" title="${esc(x.n)}: ${x.v.toFixed(m.dec)}${m.unit}"><i>${esc(x.n)}</i></span>`).join("")
         + (local[m.k] != null ? `<span class="dot loc" style="left:${pos(local[m.k])}%" title="${T("measured")}: ${local[m.k].toFixed(m.dec)}${m.unit}"><i>${T("local")}</i></span>` : "");
       const shown = local[m.k] != null ? local[m.k] : med;
       return `<div class="cons">
@@ -1090,7 +1104,7 @@ class TropicalWeatherCard extends HTMLElement {
         labels += `<text x="${cx}" y="${ty(temps[i]) - 8}" class="tv">${Math.round(temps[i])}°</text>`;
         if (pp >= 20) labels += `<text x="${cx}" y="${base + 36}" class="pv">${Math.round(pp)}%</text>`;
         const ic = resolveWeatherIcon(x.condition, { precipitationRate: num(x.precipitation) || 0, uvIndex: num(x.uv_index) || 0, apparentTemp: num(x.apparent_temperature) || 0, windSpeed: num(x.wind_speed) || 0, tropicalMode: this._config.tropical_mode, heatFrom: this._heatFrom() });
-        icons += `<image href="${this._iconUrl(nightIcon(ic, this._nightAt(Date.parse(x.datetime) + 1800000)))}" x="${cx - 13}" y="${base + 37}" width="26" height="26"/>`;
+        icons += `<image href="${esc(this._iconUrl(nightIcon(ic, this._nightAt(Date.parse(x.datetime) + 1800000))))}" x="${cx - 13}" y="${base + 37}" width="26" height="26"/>`;
       }
     });
     const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
@@ -1344,7 +1358,7 @@ class TropicalWeatherCard extends HTMLElement {
     }
     this._root.overlay.innerHTML = `
         <div class="htop">
-          <div class="hl">${this._icon(nightIcon(heroIcon, !sun.up), 64)}<div><div class="place">${name}</div><div class="cond">${((k) => { const v = T("cond." + k); return v.startsWith("cond.") ? k : v; })(heroIcon !== cond && heroIcon.startsWith("tropical") ? heroIcon : cond)}${obsNow ? ` <span class="gold odot" title="${T("measured")}">●</span>` : ""}</div>${wid !== c.weather ? `<div class="fb">↺ ${(w.attributes && w.attributes.friendly_name) || wid}</div>` : ""}</div></div>
+          <div class="hl">${this._icon(nightIcon(heroIcon, !sun.up), 64)}<div><div class="place">${esc(name)}</div><div class="cond">${((k) => { const v = T("cond." + k); return v.startsWith("cond.") ? esc(k) : v; })(heroIcon !== cond && heroIcon.startsWith("tropical") ? heroIcon : cond)}${obsNow ? ` <span class="gold odot" title="${T("measured")}">●</span>` : ""}</div>${wid !== c.weather ? `<div class="fb">↺ ${esc((w.attributes && w.attributes.friendly_name) || wid)}</div>` : ""}</div></div>
           <div class="sunbox">${sun.up ? "☀︎ ↓" : "☀︎ ↑"} ${this._fmtTime(new Date(sun.up ? sun.set : sun.rise))}<br><span>${dl}</span></div>
         </div>
         <div class="hbot">
@@ -1368,7 +1382,7 @@ class TropicalWeatherCard extends HTMLElement {
     ].filter(Boolean);
     this._root.content.innerHTML = `
       ${this._alertBanner()}
-      ${cyc ? `<div class="alert cyc">${this._icon("tropical-cyclone", 30)}<span>${T("cond.tropical-cyclone")}: <b>${cyc.name}</b>${cyc.dist !== null ? ` · ${T("km_away", { d: Math.round(cyc.dist) })}` : ""}</span></div>` : ""}
+      ${cyc ? `<div class="alert cyc">${this._icon("tropical-cyclone", 30)}<span>${T("cond.tropical-cyclone")}: <b>${esc(cyc.name)}</b>${cyc.dist !== null ? ` · ${T("km_away", { d: Math.round(cyc.dist) })}` : ""}</span></div>` : ""}
       ${lt && lt.near && storm.trend !== "approach" ? `<div class="alert bolt">${this._icon("lightning", 30)}<span>${T("lightning")} <b>${lt.d.toFixed(0)} km</b>${lt.az !== null ? ` ${T("to_the", { d: COMPASS[Math.round(lt.az / 45) % 8] })}` : ""} · ${T("strikes", { n: lt.n })}</span></div>` : ""}
       ${storm.trend === "approach" && lt && lt.active && (storm.eta <= 60 || lt.d <= 30) ? `<div class="alert bolt">${this._icon("lightning-rainy", 30)}<span>${T("storm_approach", { d: lt.az !== null ? COMPASS[Math.round(lt.az / 45) % 8] : "–", m: storm.eta })}</span></div>` : ""}
       ${storm.until && storm.until > Date.now() ? `<div class="alert bolt">${this._icon("lightning", 30)}<span>${T("stay_inside", { t: this._fmtTime(new Date(storm.until)) })}</span></div>` : ""}
