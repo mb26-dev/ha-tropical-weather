@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.0.4";
+const TWC_VERSION = "1.0.5";
 
 /*__I18N__*/
 let LANG = "en";
@@ -566,7 +566,11 @@ class TropicalWeatherCard extends HTMLElement {
       const pad = Math.max(spread * 0.15, tolerance[m.k] * 0.5);
       const a = lo - pad, b = hi + pad;
       const pos = (v) => ((v - a) / (b - a)) * 100;
-      const dots = vals.map((x) => `<span class="dot" style="left:${pos(x.v)}%" title="${x.n}: ${x.v.toFixed(m.dec)}${m.unit}"><i>${x.n}</i></span>`).join("")
+      // labels of neighbouring dots closer than ~13 % alternate above the line so they never overlap
+      const sorted = vals.map((x) => ({ ...x, p: pos(x.v) })).sort((x, y) => x.p - y.p);
+      let lastBelow = -99;
+      sorted.forEach((x) => { x.up = x.p - lastBelow < 13; if (!x.up) lastBelow = x.p; });
+      const dots = sorted.map((x) => `<span class="dot${x.up ? " up" : ""}" style="left:${x.p}%" title="${x.n}: ${x.v.toFixed(m.dec)}${m.unit}"><i>${x.n}</i></span>`).join("")
         + (local[m.k] != null ? `<span class="dot loc" style="left:${pos(local[m.k])}%" title="${T("measured")}: ${local[m.k].toFixed(m.dec)}${m.unit}"><i>${T("local")}</i></span>` : "");
       const shown = local[m.k] != null ? local[m.k] : med;
       return `<div class="cons">
@@ -988,18 +992,19 @@ TropicalWeatherCard.styles = `
   .dw { font-size: 11px; opacity: .8; }
   .conswrap { display: flex; flex-direction: column; gap: 16px; padding-top: 6px; }
   .ch { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
-  .ch span { opacity: .7; width: 78px; }
+  .ch span { opacity: .7; min-width: 96px; flex: 0 0 auto; white-space: nowrap; margin-right: 6px; }
   .ch b { font-size: 16px; font-weight: 500; }
   .ch em { font-style: normal; font-size: 11px; padding: 1px 7px; border-radius: 8px; margin-left: auto; }
   .ag { background: rgba(76,175,80,.15); color: #81c784; }
   .dg { background: rgba(255,160,0,.15); color: #ffb74d; }
-  .track { position: relative; height: 26px; margin-top: 4px; }
+  .track { position: relative; height: 26px; margin-top: 14px; }
   .track::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 2px; background: rgba(255,255,255,.08); }
   .span { position: absolute; top: 5px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); }
   .dot { position: absolute; top: 3px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #90a4ae; }
   .dot i { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 9.5px; font-style: normal; opacity: .7; white-space: nowrap; }
   .dot.loc { background: var(--gold); box-shadow: 0 0 6px rgba(212,175,55,.8); }
   .dot.loc i { color: var(--gold); opacity: 1; top: -13px; }
+  .dot.up i { top: -13px; }
   .note { font-size: 11.5px; opacity: .55; margin-top: 12px; }
   .empty { padding: 24px 0; text-align: center; opacity: .6; font-size: 13px; }
   @media (prefers-reduced-motion: reduce) { .alert, .tile.hot { animation: none; } }
