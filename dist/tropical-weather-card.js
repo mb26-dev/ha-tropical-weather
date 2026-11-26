@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.2.1";
+const TWC_VERSION = "1.2.2";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -686,14 +686,24 @@ class TropicalWeatherCard extends HTMLElement {
     let day = rows.filter((r) => r.t + 3600000 > Date.now());
     let prefix = "";
     if (!day.length || !isDay(day[0])) { const nx = day.findIndex(isDay); day = nx >= 0 ? day.slice(nx) : []; if (nx > 0 && day.length && this._localHour(day[0].t) < 12 && new Date(day[0].t).getDate() !== new Date().getDate()) prefix = T("tomorrow") + " · "; }
+    // the current hour uses your own humidity sensor when there is one; rain = most models expect it
+    const rhNow = this._num(this._config.humidity) ?? num(a.humidity);
+    const rhOf = (r, i) => (i === 0 && rhNow !== null && r.t <= Date.now() ? rhNow : (r.rh ?? 80));
     let n = 0;
-    while (n < day.length && isDay(day[n]) && day[n].pp < 40 && (day[n].rh ?? 80) < 92) n++;
+    while (n < day.length && isDay(day[n]) && day[n].pp < 50 && rhOf(day[n], n) < 92) n++;
     const dayLen = day.findIndex((r) => !isDay(r));
-    let lSub, lCol;
-    if (n >= 3 && (dayLen === -1 ? n === day.length : n >= dayLen)) { lSub = prefix + T("dries_all_day"); lCol = "#4caf50"; }
-    else if (n >= 3) { lSub = prefix + T("dries_until", { t: this._fmtTime(new Date(day[n].t)) }); lCol = "#ffc107"; }
-    else { lSub = prefix + T("laundry_bad"); lCol = "#f44336"; }
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:tshirt-crew-outline"></ha-icon>${T("laundry")}</span><b class="sm" style="color:${lCol}">${n >= 3 ? "✓" : "✗"}</b><span class="ts">${lSub}</span></div>`);
+    // drying time: about 1.5 h in sun below 65 % humidity, 2.5 h below 80 %, otherwise 4 h
+    const rhRef = n ? rhOf(day[0], 0) : 99;
+    const need = rhRef < 65 ? 1.5 : rhRef < 80 ? 2.5 : 4;
+    const from = Math.max(Date.now(), day.length ? day[0].t : Date.now());
+    const until = n < day.length ? day[n].t : (day.length ? day[day.length - 1].t + 3600000 : from);
+    const avail = n ? Math.max(0, (until - from) / 3600000) : 0;
+    let lSub, lCol, lMark = "✓";
+    if (n && avail >= need && (dayLen === -1 ? n === day.length : n >= dayLen)) { lSub = prefix + T("dries_all_day"); lCol = "#4caf50"; }
+    else if (n && avail >= need) { lSub = prefix + T("dries_until", { t: this._fmtTime(new Date(until)) }); lCol = "#ffc107"; }
+    else if (n && avail >= 0.5) { lSub = prefix + T("dries_until", { t: this._fmtTime(new Date(until)) }); lCol = "#ff9800"; lMark = "≈"; }
+    else { lSub = prefix + T("laundry_bad"); lCol = "#f44336"; lMark = "✗"; }
+    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:tshirt-crew-outline"></ha-icon>${T("laundry")}</span><b class="sm" style="color:${lCol}">${lMark}</b><span class="ts">${lSub}</span></div>`);
 
     // 4) mosquitoes (Aedes): warm 26-32 deg, humid, recent / coming rain = breeding water
     const nx24 = rows.slice(0, 24);
