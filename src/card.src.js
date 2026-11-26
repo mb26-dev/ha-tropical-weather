@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.0.5";
+const TWC_VERSION = "1.1.0";
 
 /*__I18N__*/
 let LANG = "en";
@@ -49,6 +49,8 @@ function irradiance(elev, cloudPct) {
 function asphaltTemp(air, g, wind) { return air + (0.033 * g) / (1 + (wind || 0) / 30); }
 
 function num(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
+function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]); }
+const ALERT_RANK = { minor: 1, moderate: 2, severe: 3, extreme: 4 };
 function median(a) { const s = a.filter((x) => x !== null).sort((x, y) => x - y); if (!s.length) return null; const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
@@ -216,7 +218,13 @@ class TropicalWeatherCard extends HTMLElement {
       language: "auto",
       solar_radiation: null,
       insights: true,
+      alerts: null,
+      alert_areas: null,
+      alert_min_severity: "minor",
+      alert_max_age: 24,
     }, config);
+    if (typeof this._config.alerts === "string") this._config.alerts = [this._config.alerts];
+    if (typeof this._config.alert_areas === "string") this._config.alert_areas = [this._config.alert_areas];
     if (!this._config.sources.includes(this._config.weather)) this._config.sources.unshift(this._config.weather);
     this._lastKey = "";
   }
@@ -228,7 +236,7 @@ class TropicalWeatherCard extends HTMLElement {
     this._hass = hass;
     if (first || this._subscribedTo !== this._activeWeather()) this._subscribe();
     const c = this._config;
-    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust].filter(Boolean);
+    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust, ...this._alertIds()].filter(Boolean);
     if (this._radarEl) this._radarEl.hass = hass;
     this._trackLightning(first);
     const key = ids.map((id) => { const s = hass.states[id]; return s ? s.last_updated + s.state : "x"; }).join("|");
@@ -443,6 +451,103 @@ class TropicalWeatherCard extends HTMLElement {
     const d = this._num(c.lightning_distance), n = this._num(c.lightning_counter), az = this._num(c.lightning_azimuth);
     const active = d !== null && (n === null || n > 0);
     return { active, d, n: n || 0, az, near: active && d <= (num(c.lightning_alert_km) || 15) };
+  }
+
+  // ---- official weather warnings -------------------------------------------------
+  // alerts: list of entity ids; the word "auto" adds every CAP alert sensor
+  // (an entity with "severity" plus "geocodes" or "identifier", e.g. the CAP Alerts integration)
+  _alertIds() {
+    const c = this._config;
+    if (!c.alerts || !c.alerts.length || !this._hass) return [];
+    const out = [];
+    for (const a of c.alerts) {
+      if (a === "auto") {
+        for (const [id, st] of Object.entries(this._hass.states)) {
+          const at = st.attributes;
+          if (at && at.severity !== undefined && (at.geocodes !== undefined || at.identifier !== undefined) && !out.includes(id)) out.push(id);
+        }
+      } else if (!out.includes(a)) out.push(a);
+    }
+    return out;
+  }
+
+  _alerts() {
+    const c = this._config;
+    const now = Date.now();
+    const minRank = ALERT_RANK[String(c.alert_min_severity || "minor").toLowerCase()] || 1;
+    const areas = (c.alert_areas || []).map((x) => String(x).toLowerCase());
+    const pick = (at, ...keys) => { for (const k of keys) if (at[k] !== undefined && at[k] !== null && at[k] !== "") return at[k]; return null; };
+    const time = (v) => { const t = Date.parse(v); return Number.isFinite(t) ? t : null; };
+    const list = [];
+    for (const id of this._alertIds()) {
+      const st = this._state(id);
+      if (!st) continue;
+      const at = st.attributes || {};
+      const domain = id.split(".")[0];
+      const state = String(st.state).toLowerCase();
+      if (["unavailable", "unknown", "off", "none", "no", "0", "", "inactive", "expired", "cancel"].includes(state) && domain !== "event") continue;
+      if (domain === "event") {
+        // feed / event entities: the state is the time of the last event
+        const t = time(st.state);
+        if (t === null || now - t > (num(c.alert_max_age) || 24) * 3600000) continue;
+      }
+      if (String(pick(at, "status") || "actual").toLowerCase() !== "actual") continue;
+      if (String(pick(at, "msg_type", "msgType", "phase") || "").toLowerCase() === "cancel") continue;
+      const expires = time(pick(at, "expires", "expires_at", "ends", "end", "end_time"));
+      if (expires !== null && expires < now) continue;
+      const onset = time(pick(at, "onset", "effective", "start", "start_time"));
+      // area filter only for entities that say where they apply
+      const geo = at.geocodes ? JSON.stringify(at.geocodes).toLowerCase() : "";
+      const areaTxt = String(pick(at, "areaDesc", "area_desc", "area", "areas") || "").toLowerCase();
+      if (areas.length && (geo || areaTxt) && !areas.some((a) => geo.includes(a) || areaTxt.includes(a))) continue;
+      let sev = String(pick(at, "severity", "awareness_level") || "").toLowerCase();
+      if (/4|red|extreme/.test(sev)) sev = "extreme"; else if (/3|orange|severe/.test(sev)) sev = "severe"; else if (/2|yellow|moderate/.test(sev)) sev = "moderate"; else sev = "minor";
+      if (ALERT_RANK[sev] < minRank) continue;
+      const title = pick(at, "headline", "event", "title") || (domain === "sensor" && isNaN(parseFloat(st.state)) ? st.state : null) || at.friendly_name || T("warning");
+      list.push({
+        id, sev, title: String(title),
+        event: String(pick(at, "event", "title") || ""),
+        text: String(pick(at, "description", "summary", "content") || ""),
+        instruction: String(pick(at, "instruction") || ""),
+        link: pick(at, "web", "link", "url"),
+        sender: pick(at, "sender_name", "senderName", "sender"),
+        expires, onset,
+        when: time(pick(at, "sent", "published")) || time(st.state) || Date.parse(st.last_changed),
+      });
+    }
+    // drop feed items that repeat a structured CAP alert with the same event name
+    const capEvents = new Set(list.filter((a) => !a.id.startsWith("event.")).map((a) => a.event.toLowerCase()).filter(Boolean));
+    const out = list.filter((a) => !(a.id.startsWith("event.") && capEvents.has(a.title.toLowerCase())));
+    out.sort((a, b) => ALERT_RANK[b.sev] - ALERT_RANK[a.sev] || b.when - a.when);
+    return out;
+  }
+
+  _fmtWhen(t) {
+    const d = new Date(t);
+    const sameDay = this._dayKey(d) === this._dayKey(new Date());
+    return (sameDay ? "" : this._dayName(d) + " ") + this._fmtTime(d);
+  }
+  _dayKey(d) { return new Intl.DateTimeFormat("en-CA", { timeZone: this._tz() }).format(d); }
+
+  _alertBanner() {
+    const all = this._alerts();
+    if (!all.length) return "";
+    const tri = (cls) => `<svg class="atri ${cls}" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M12 2.5 1.5 21h21L12 2.5z" fill="currentColor" opacity=".22"/><path d="M12 2.5 1.5 21h21L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="11" y="9" width="2" height="6.5" rx="1" fill="currentColor"/><circle cx="12" cy="18" r="1.2" fill="currentColor"/></svg>`;
+    const top = all[0];
+    const sevLabel = (a) => T("sev_" + a.sev);
+    const meta = (a) => [sevLabel(a), a.expires ? T("valid_until", { t: this._fmtWhen(a.expires) }) : (a.onset && a.onset > Date.now() ? "▸ " + this._fmtWhen(a.onset) : this._fmtWhen(a.when))].filter(Boolean).join(" · ");
+    const open = !!this._alertOpen;
+    const details = open ? `<div class="adet">${all.map((a, i) => `
+        <div class="aitem">
+          ${i > 0 || all.length > 1 ? `<div class="ahead"><span class="adot ${a.sev}"></span><b>${esc(a.title)}</b><small>${esc(meta(a))}</small></div>` : ""}
+          ${a.text ? `<p>${esc(a.text.length > 700 ? a.text.slice(0, 700) + " …" : a.text).replace(/\n+/g, "<br>")}</p>` : ""}
+          ${a.instruction ? `<p class="ainst">${esc(a.instruction)}</p>` : ""}
+          <div class="asrc">${a.sender ? esc(a.sender) : ""}${a.link && /^https?:/i.test(a.link) ? `${a.sender ? " · " : ""}<a href="${esc(a.link)}" target="_blank" rel="noopener noreferrer">${T("details")} ↗</a>` : ""}</div>
+        </div>`).join("")}</div>` : "";
+    return `<div class="alert wx ${top.sev}${open ? " open" : ""}" data-alert="1" role="button" tabindex="0">
+        <div class="arow">${tri(top.sev)}<span class="atxt"><b>${esc(top.title)}</b><small>${esc(meta(top))}</small></span>${all.length > 1 ? `<em class="amore">${T("more_alerts", { n: all.length - 1 })}</em>` : ""}<i class="achev">${open ? "▴" : "▾"}</i></div>
+        ${details}
+      </div>`;
   }
 
   _cyclone() {
@@ -838,7 +943,12 @@ class TropicalWeatherCard extends HTMLElement {
         this._ro = new ResizeObserver((en) => { const w = en[0].contentRect.width; const b = this._colsFor(w); this._cw = w; if (b !== this._colsNow) this._render(); });
         this._ro.observe(this._root.content);
       }
-      this._root.content.addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) { this._tab = b.dataset.tab; this._render(); } });
+      this._root.content.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-tab]"); if (b) { this._tab = b.dataset.tab; this._render(); return; }
+        if (e.target.closest("a")) return;
+        if (e.target.closest("[data-alert]")) { this._alertOpen = !this._alertOpen; this._render(); }
+      });
+      this._root.content.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.closest && e.target.closest("[data-alert]")) { e.preventDefault(); this._alertOpen = !this._alertOpen; this._render(); } });
     }
     const skyKey = [heroIcon, sun.up].join("|");
     if (skyKey !== this._skyKey) {
@@ -871,6 +981,7 @@ class TropicalWeatherCard extends HTMLElement {
       tide ? `<div class="tile"><span class="tl">${T("tide")}</span><b>${tide.now.toFixed(1)}<small> m</small></b><span class="ts">${tide.rising ? "▲ " + T("rising") : "▼ " + T("falling")} · ${tide.next.type === "high" ? T("high") : T("low")} ${this._fmtTime(new Date(tide.next.t))}</span></div>` : ""
     ].filter(Boolean);
     this._root.content.innerHTML = `
+      ${this._alertBanner()}
       ${cyc ? `<div class="alert cyc">${this._icon("tropical-cyclone", 30)}<span>${T("cond.tropical-cyclone")}: <b>${cyc.name}</b>${cyc.dist !== null ? ` · ${T("km_away", { d: Math.round(cyc.dist) })}` : ""}</span></div>` : ""}
       ${lt && lt.near && storm.trend !== "approach" ? `<div class="alert bolt">${this._icon("lightning", 30)}<span>${T("lightning")} <b>${lt.d.toFixed(0)} km</b>${lt.az !== null ? ` ${T("to_the", { d: COMPASS[Math.round(lt.az / 45) % 8] })}` : ""} · ${T("strikes", { n: lt.n })}</span></div>` : ""}
       ${storm.trend === "approach" && lt && lt.active && (storm.eta <= 60 || lt.d <= 30) ? `<div class="alert bolt">${this._icon("lightning-rainy", 30)}<span>${T("storm_approach", { d: lt.az !== null ? COMPASS[Math.round(lt.az / 45) % 8] : "–", m: storm.eta })}</span></div>` : ""}
@@ -916,6 +1027,31 @@ TropicalWeatherCard.styles = `
   .alert .wxi { flex: 0 0 30px; }
   .alert.bolt { background: rgba(250,204,21,.12); border: 1px solid rgba(250,204,21,.55); animation: pulse 1.6s ease-in-out infinite; }
   .alert.cyc { background: rgba(239,68,68,.14); border: 1px solid rgba(239,68,68,.6); animation: pulse 1.6s ease-in-out infinite; }
+  .alert.wx { display: block; cursor: pointer; padding: 9px 12px; }
+  .alert.wx .arow { display: flex; align-items: center; gap: 10px; }
+  .alert.wx .atri { flex: 0 0 28px; }
+  .alert.wx .atxt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .alert.wx .atxt b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert.wx .atxt small { font-size: 12px; opacity: .8; margin-top: 1px; }
+  .alert.wx .amore { font-style: normal; font-size: 11px; padding: 2px 8px; border-radius: 9px; background: rgba(255,255,255,.1); white-space: nowrap; }
+  .alert.wx .achev { font-style: normal; opacity: .6; font-size: 12px; }
+  .alert.wx.minor { background: rgba(56,189,248,.10); border: 1px solid rgba(56,189,248,.45); }
+  .alert.wx.minor .atri, .adot.minor { color: #38bdf8; }
+  .alert.wx.moderate { background: rgba(250,204,21,.11); border: 1px solid rgba(250,204,21,.5); }
+  .alert.wx.moderate .atri, .adot.moderate { color: #facc15; }
+  .alert.wx.severe { background: rgba(249,115,22,.14); border: 1px solid rgba(249,115,22,.6); }
+  .alert.wx.severe .atri, .adot.severe { color: #fb923c; }
+  .alert.wx.extreme { background: rgba(239,68,68,.16); border: 1px solid rgba(239,68,68,.7); animation: pulse 1.6s ease-in-out infinite; }
+  .alert.wx.extreme .atri, .adot.extreme { color: #f87171; }
+  .adet { margin: 8px 0 2px 38px; font-size: 13px; line-height: 1.45; cursor: auto; }
+  .adet p { margin: 6px 0; opacity: .9; }
+  .adet .ainst { font-weight: 500; opacity: 1; }
+  .aitem + .aitem { border-top: 1px solid rgba(255,255,255,.1); margin-top: 8px; padding-top: 8px; }
+  .ahead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .ahead small { opacity: .7; font-size: 11.5px; }
+  .adot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block; }
+  .asrc { font-size: 11.5px; opacity: .7; margin-top: 4px; }
+  .asrc a { color: inherit; text-decoration: underline; }
   @keyframes pulse { 50% { box-shadow: 0 0 14px rgba(255,200,0,.35); } }
   .tile.hot { border-color: rgba(250,204,21,.7); box-shadow: 0 0 10px rgba(250,204,21,.35); animation: pulse 1.6s ease-in-out infinite; }
   .tile.hot b { color: #facc15; }

@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.0.5";
+const TWC_VERSION = "1.1.0";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -16,7 +16,7 @@ const I18N_KEYS = {
   uv: ["low", "moderate", "high", "very_high", "extreme"],
   trend: ["steady", "falling", "falling_fast", "rising", "rising_fast"],
   tab: ["hourly", "daily", "tide", "sources", "radar"],
-  extra: ["paws", "paws_ok", "paws_hot", "paws_danger", "walk_from", "best_time", "none_today", "laundry", "dries_until", "dries_all_day", "laundry_bad", "tomorrow", "mosquitoes", "bites", "storm_approach", "storm_away", "storm_steady", "stay_inside", "bites_now", "next_peak"],
+  extra: ["paws", "paws_ok", "paws_hot", "paws_danger", "walk_from", "best_time", "none_today", "laundry", "dries_until", "dries_all_day", "laundry_bad", "tomorrow", "mosquitoes", "bites", "storm_approach", "storm_away", "storm_steady", "stay_inside", "bites_now", "next_peak", "warning", "valid_until", "sev_extreme", "sev_severe", "sev_moderate", "sev_minor", "more_alerts", "details"],
   flat: ["loading", "no_rain", "rain_now", "rain_from", "until", "approx", "beyond_24h", "peak", "temperature", "wind", "humidity", "pressure", "measured", "local", "agree", "now", "today", "rain_probability", "gust", "no_tide", "rising", "falling", "high", "low", "high_tide", "low_tide", "entity_missing", "weather", "daylight_left", "to_sunrise", "sources_note", "feels_like", "heat_index", "mugginess", "uv_max", "lightning", "from", "strikes", "none_nearby", "sea", "water_temp", "tide", "km_away", "to_the", "radar_error", "next_24h", "max"],
 };
 
@@ -215,25 +215,25 @@ const I18N_SRC = {
 
 // v0.9 additions: tropical day insights and thunderstorm tracking (same order as I18N_KEYS.extra)
 const I18N_EXTRA = {
-  "en": ["Asphalt / paws", "OK for walks", "Hot – keep walks short", "Too hot for paws", "walks from {t}", "Best time outside", "No good window", "Laundry", "dries until {t}", "dries all day", "won't dry outside", "tomorrow", "Mosquitoes", "most bites {t}", "Thunderstorm approaching from {d} · overhead in ~{m} min", "moving away", "not moving closer", "Stay indoors until {t} (30/30 rule)", "Peak biting time now", "next peak {t}"],
-  "de": ["Asphalt / Pfoten", "OK für Gassi", "Heiß – nur kurz raus", "Zu heiß für Pfoten", "Gassi ab {t}", "Beste Zeit draußen", "Kein gutes Fenster", "Wäsche", "trocknet bis {t}", "trocknet den ganzen Tag", "trocknet draußen nicht", "morgen", "Mücken", "meiste Stiche {t}", "Gewitter zieht aus {d} heran · in ca. {m} min hier", "zieht ab", "kommt nicht näher", "Drinnen bleiben bis {t} (30/30-Regel)", "Jetzt Hauptstechzeit", "nächste Stechzeit {t}"],
-  "th": ["ยางมะตอย / อุ้งเท้า", "พาเดินเล่นได้", "ร้อน – เดินสั้นๆ", "ร้อนเกินไปสำหรับอุ้งเท้า", "เดินเล่นได้ตั้งแต่ {t}", "ช่วงเวลาที่ดีที่สุดนอกบ้าน", "ไม่มีช่วงที่เหมาะ", "ตากผ้า", "แห้งได้ถึง {t}", "แห้งได้ทั้งวัน", "ตากข้างนอกไม่แห้ง", "พรุ่งนี้", "ยุง", "ยุงกัดมากช่วง {t}", "พายุฝนฟ้าคะนองกำลังเข้ามาจากทิศ {d} · ถึงในราว {m} นาที", "กำลังเคลื่อนออกไป", "ไม่ได้เข้าใกล้", "อยู่ในอาคารจนถึง {t} (กฎ 30/30)", "ตอนนี้ยุงกัดมาก", "ช่วงยุงกัดถัดไป {t}"],
-  "vi": ["Mặt đường / chân thú cưng", "Đi dạo được", "Nóng – chỉ đi ngắn", "Quá nóng cho chân", "đi dạo từ {t}", "Thời điểm ra ngoài tốt nhất", "Không có khung giờ tốt", "Phơi đồ", "khô đến {t}", "khô cả ngày", "phơi ngoài không khô", "ngày mai", "Muỗi", "đốt nhiều nhất {t}", "Dông đang đến từ hướng {d} · tới đây sau ~{m} phút", "đang đi xa", "không tiến lại gần", "Ở trong nhà đến {t} (quy tắc 30/30)", "Đang là giờ muỗi đốt nhiều", "đợt đốt tiếp theo {t}"],
-  "id": ["Aspal / kaki hewan", "Aman untuk jalan-jalan", "Panas – jalan singkat saja", "Terlalu panas untuk kaki", "jalan-jalan mulai {t}", "Waktu terbaik di luar", "Tidak ada waktu yang baik", "Jemuran", "kering sampai {t}", "kering seharian", "tidak akan kering di luar", "besok", "Nyamuk", "paling banyak gigitan {t}", "Badai petir mendekat dari {d} · tiba dalam ~{m} mnt", "menjauh", "tidak mendekat", "Tetap di dalam sampai {t} (aturan 30/30)", "Sekarang puncak gigitan", "puncak berikutnya {t}"],
-  "ms": ["Asfalt / tapak kaki", "Selamat untuk berjalan", "Panas – jalan sekejap", "Terlalu panas untuk tapak kaki", "berjalan dari {t}", "Masa terbaik di luar", "Tiada masa yang sesuai", "Jemuran", "kering hingga {t}", "kering sepanjang hari", "tidak akan kering di luar", "esok", "Nyamuk", "paling banyak gigitan {t}", "Ribut petir menghampiri dari {d} · tiba dalam ~{m} min", "semakin menjauh", "tidak menghampiri", "Kekal di dalam hingga {t} (peraturan 30/30)", "Kini waktu puncak gigitan", "puncak seterusnya {t}"],
-  "fil": ["Aspalto / paa", "Okay maglakad", "Mainit – saglit lang", "Masyadong mainit para sa paa", "lakad mula {t}", "Pinakamagandang oras sa labas", "Walang magandang oras", "Sampay", "tuyo hanggang {t}", "tuyo buong araw", "hindi matutuyo sa labas", "bukas", "Lamok", "pinakamaraming kagat {t}", "Paparating ang kulog at kidlat mula {d} · nandito sa ~{m} min", "papalayo", "hindi lumalapit", "Manatili sa loob hanggang {t} (30/30 rule)", "Rurok ng kagat ngayon", "susunod na rurok {t}"],
-  "km": ["កៅស៊ូផ្លូវ / ជើងសត្វ", "ដើរលេងបាន", "ក្ដៅ – ដើរខ្លីៗ", "ក្ដៅពេកសម្រាប់ជើងសត្វ", "ដើរលេងចាប់ពី {t}", "ពេលល្អបំផុតនៅខាងក្រៅ", "គ្មានពេលល្អ", "ហាលខោអាវ", "ស្ងួតដល់ {t}", "ស្ងួតពេញមួយថ្ងៃ", "ហាលខាងក្រៅមិនស្ងួត", "ថ្ងៃស្អែក", "មូស", "ខាំច្រើនបំផុត {t}", "ផ្គររន្ទះកំពុងមកពីទិស {d} · មកដល់ប្រហែល {m} នាទី", "កំពុងរសាត់ចេញ", "មិនខិតមកជិត", "នៅក្នុងផ្ទះរហូតដល់ {t} (ច្បាប់ 30/30)", "ឥឡូវជាពេលមូសខាំខ្លាំង", "ពេលខាំខ្លាំងបន្ទាប់ {t}"],
-  "lo": ["ຢາງປູທາງ / ຕີນສັດ", "ພາຍ່າງຫຼິ້ນໄດ້", "ຮ້ອນ – ຍ່າງສັ້ນໆ", "ຮ້ອນເກີນໄປສຳລັບຕີນ", "ຍ່າງຫຼິ້ນໄດ້ຕັ້ງແຕ່ {t}", "ເວລາທີ່ດີທີ່ສຸດຢູ່ນອກ", "ບໍ່ມີຊ່ວງທີ່ເໝາະ", "ຕາກເຄື່ອງ", "ແຫ້ງໄດ້ຮອດ {t}", "ແຫ້ງໄດ້ໝົດມື້", "ຕາກຂ້າງນອກບໍ່ແຫ້ງ", "ມື້ອື່ນ", "ຍຸງ", "ກັດຫຼາຍສຸດ {t}", "ພາຍຸຟ້າຮ້ອງກຳລັງມາຈາກທິດ {d} · ຮອດປະມານ {m} ນາທີ", "ກຳລັງເຄື່ອນອອກໄປ", "ບໍ່ໄດ້ເຂົ້າໃກ້", "ຢູ່ໃນເຮືອນຈົນຮອດ {t} (ກົດ 30/30)", "ຕອນນີ້ຍຸງກັດຫຼາຍ", "ຊ່ວງຍຸງກັດຕໍ່ໄປ {t}"],
-  "my": ["ကတ္တရာလမ်း / ခြေဖဝါး", "လမ်းလျှောက်ရန် အဆင်ပြေ", "ပူ – ခဏသာ လျှောက်ပါ", "ခြေဖဝါးအတွက် အလွန်ပူ", "{t} မှ လမ်းလျှောက်နိုင်", "အပြင်ထွက်ရန် အကောင်းဆုံးအချိန်", "သင့်တော်သောအချိန် မရှိ", "အဝတ်လှန်း", "{t} အထိ ခြောက်မည်", "တစ်နေကုန် ခြောက်မည်", "အပြင်တွင် မခြောက်ပါ", "မနက်ဖြန်", "ခြင်", "{t} တွင် အကိုက်အများဆုံး", "{d} မှ မိုးကြိုးမုန်တိုင်း လာနေသည် · ~{m} မိနစ်အတွင်း ရောက်မည်", "ဝေးသွားနေသည်", "နီးမလာပါ", "{t} အထိ အိမ်ထဲတွင်နေပါ (30/30 စည်းမျဉ်း)", "ယခု ခြင်ကိုက်အများဆုံးအချိန်", "နောက်ကိုက်ချိန် {t}"],
-  "zh-Hans": ["沥青 / 爪垫", "适合遛狗", "炎热 – 短时散步", "对爪垫太烫", "{t} 起可遛狗", "最佳户外时段", "没有合适时段", "晾衣", "可晾干至 {t}", "全天可晾干", "户外晾不干", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正从{d}方向逼近 · 约 {m} 分钟后到达", "正在远离", "未靠近", "请待在室内至 {t}（30/30 规则）", "现在是叮咬高峰", "下次高峰 {t}"],
-  "zh-Hant": ["瀝青 / 腳掌", "適合遛狗", "炎熱 – 短時散步", "對腳掌太燙", "{t} 起可遛狗", "最佳戶外時段", "沒有合適時段", "晾衣", "可晾乾至 {t}", "全天可晾乾", "戶外晾不乾", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正從{d}方向逼近 · 約 {m} 分鐘後到達", "正在遠離", "未靠近", "請待在室內至 {t}（30/30 規則）", "現在是叮咬高峰", "下次高峰 {t}"],
-  "ja": ["路面 / 肉球", "散歩OK", "暑い – 短めに", "肉球には熱すぎ", "{t} から散歩可", "外出のベストタイム", "適した時間なし", "洗濯物", "{t} まで乾く", "一日中乾く", "外では乾かない", "明日", "蚊", "刺されやすい時間 {t}", "雷雨が{d}から接近中 · 約 {m} 分で到達", "遠ざかっています", "接近していません", "{t} まで屋内に（30/30ルール）", "今が刺されやすい時間", "次のピーク {t}"],
-  "ko": ["아스팔트 / 발바닥", "산책 가능", "더움 – 짧게 산책", "발바닥에 너무 뜨거움", "{t}부터 산책 가능", "외출하기 좋은 시간", "적당한 시간 없음", "빨래", "{t}까지 마름", "하루 종일 마름", "밖에서는 안 마름", "내일", "모기", "물림 최다 {t}", "뇌우가 {d} 방향에서 접근 중 · 약 {m}분 후 도달", "멀어지는 중", "접근하지 않음", "{t}까지 실내에 머무르세요 (30/30 규칙)", "지금 물림 최다 시간", "다음 최다 시간 {t}"],
-  "hi": ["डामर / पंजे", "टहलने के लिए ठीक", "गर्म – छोटी सैर", "पंजों के लिए बहुत गर्म", "{t} से टहलें", "बाहर जाने का सबसे अच्छा समय", "कोई अच्छा समय नहीं", "कपड़े सुखाना", "{t} तक सूखेंगे", "पूरे दिन सूखेंगे", "बाहर नहीं सूखेंगे", "कल", "मच्छर", "सबसे ज़्यादा काटते हैं {t}", "{d} से आंधी-तूफ़ान आ रहा है · लगभग {m} मिनट में यहाँ", "दूर जा रहा है", "पास नहीं आ रहा", "{t} तक घर के अंदर रहें (30/30 नियम)", "अभी काटने का चरम समय", "अगला चरम समय {t}"],
-  "bn": ["পিচ রাস্তা / থাবা", "হাঁটার জন্য ঠিক আছে", "গরম – অল্প হাঁটুন", "থাবার জন্য খুব গরম", "{t} থেকে হাঁটা যাবে", "বাইরে যাওয়ার সেরা সময়", "ভালো সময় নেই", "কাপড় শুকানো", "{t} পর্যন্ত শুকাবে", "সারাদিন শুকাবে", "বাইরে শুকাবে না", "আগামীকাল", "মশা", "সবচেয়ে বেশি কামড়ায় {t}", "{d} দিক থেকে বজ্রঝড় এগিয়ে আসছে · প্রায় {m} মিনিটে পৌঁছাবে", "দূরে সরে যাচ্ছে", "কাছে আসছে না", "{t} পর্যন্ত ঘরে থাকুন (30/30 নিয়ম)", "এখন কামড়ের সর্বোচ্চ সময়", "পরবর্তী সর্বোচ্চ সময় {t}"],
-  "ne": ["पिच सडक / पन्जा", "हिँडाउन ठीक", "गर्मी – छोटो हिँडाइ", "पन्जाका लागि धेरै तातो", "{t} बाट हिँडाउनुहोस्", "बाहिर जाने उत्तम समय", "राम्रो समय छैन", "लुगा सुकाउने", "{t} सम्म सुक्छ", "दिनभर सुक्छ", "बाहिर सुक्दैन", "भोलि", "लामखुट्टे", "सबैभन्दा बढी टोक्ने {t}", "{d} बाट चट्याङसहितको आँधी नजिकिँदैछ · करिब {m} मिनेटमा यहाँ", "टाढा जाँदैछ", "नजिक आउँदैन", "{t} सम्म भित्रै बस्नुहोस् (30/30 नियम)", "अहिले टोक्ने चरम समय", "अर्को चरम समय {t}"],
-  "si": ["තාර පාර / පාද", "ඇවිදීමට හොඳයි", "උණුසුම් – කෙටියෙන් ඇවිදින්න", "පාදවලට ඉතා උණුසුම්", "{t} සිට ඇවිදින්න", "එළියට යාමට හොඳම කාලය", "සුදුසු කාලයක් නැත", "රෙදි වියළීම", "{t} දක්වා වියළේ", "දවස පුරා වියළේ", "එළියේ වියළෙන්නේ නැත", "හෙට", "මදුරුවන්", "වැඩිම දෂ්ට කිරීම් {t}", "{d} දෙසින් ගිගුරුම් කුණාටුවක් ළං වෙයි · මිනි {m} කින් පමණ මෙහි", "ඈත් වෙමින්", "ළං නොවේ", "{t} දක්වා ඇතුළත සිටින්න (30/30 රීතිය)", "දැන් දෂ්ට කිරීම් වැඩිම කාලය", "ඊළඟ උපරිම කාලය {t}"],
-  "ta": ["தார் சாலை / பாதம்", "நடைக்கு ஏற்றது", "வெப்பம் – குறுகிய நடை", "பாதங்களுக்கு மிகவும் சூடு", "{t} முதல் நடை", "வெளியே செல்ல சிறந்த நேரம்", "நல்ல நேரம் இல்லை", "துணி காயவைத்தல்", "{t} வரை காயும்", "நாள் முழுவதும் காயும்", "வெளியே காயாது", "நாளை", "கொசுக்கள்", "அதிக கடி {t}", "{d} திசையிலிருந்து இடியுடன் கூடிய புயல் நெருங்குகிறது · சுமார் {m} நிமிடத்தில் இங்கே", "விலகிச் செல்கிறது", "நெருங்கவில்லை", "{t} வரை உள்ளே இருங்கள் (30/30 விதி)", "இப்போது அதிக கடி நேரம்", "அடுத்த உச்ச நேரம் {t}"],
+  "en": ["Asphalt / paws", "OK for walks", "Hot – keep walks short", "Too hot for paws", "walks from {t}", "Best time outside", "No good window", "Laundry", "dries until {t}", "dries all day", "won't dry outside", "tomorrow", "Mosquitoes", "most bites {t}", "Thunderstorm approaching from {d} · overhead in ~{m} min", "moving away", "not moving closer", "Stay indoors until {t} (30/30 rule)", "Peak biting time now", "next peak {t}", "Weather warning", "until {t}", "Extreme", "Severe", "Moderate", "Advisory", "+{n} more", "Details"],
+  "de": ["Asphalt / Pfoten", "OK für Gassi", "Heiß – nur kurz raus", "Zu heiß für Pfoten", "Gassi ab {t}", "Beste Zeit draußen", "Kein gutes Fenster", "Wäsche", "trocknet bis {t}", "trocknet den ganzen Tag", "trocknet draußen nicht", "morgen", "Mücken", "meiste Stiche {t}", "Gewitter zieht aus {d} heran · in ca. {m} min hier", "zieht ab", "kommt nicht näher", "Drinnen bleiben bis {t} (30/30-Regel)", "Jetzt Hauptstechzeit", "nächste Stechzeit {t}", "Wetterwarnung", "bis {t}", "Extrem", "Unwetter", "Markant", "Hinweis", "+{n} weitere", "Details"],
+  "th": ["ยางมะตอย / อุ้งเท้า", "พาเดินเล่นได้", "ร้อน – เดินสั้นๆ", "ร้อนเกินไปสำหรับอุ้งเท้า", "เดินเล่นได้ตั้งแต่ {t}", "ช่วงเวลาที่ดีที่สุดนอกบ้าน", "ไม่มีช่วงที่เหมาะ", "ตากผ้า", "แห้งได้ถึง {t}", "แห้งได้ทั้งวัน", "ตากข้างนอกไม่แห้ง", "พรุ่งนี้", "ยุง", "ยุงกัดมากช่วง {t}", "พายุฝนฟ้าคะนองกำลังเข้ามาจากทิศ {d} · ถึงในราว {m} นาที", "กำลังเคลื่อนออกไป", "ไม่ได้เข้าใกล้", "อยู่ในอาคารจนถึง {t} (กฎ 30/30)", "ตอนนี้ยุงกัดมาก", "ช่วงยุงกัดถัดไป {t}", "ประกาศเตือนภัย", "ถึง {t}", "รุนแรงมาก", "รุนแรง", "ปานกลาง", "แจ้งเตือน", "+{n} รายการ", "รายละเอียด"],
+  "vi": ["Mặt đường / chân thú cưng", "Đi dạo được", "Nóng – chỉ đi ngắn", "Quá nóng cho chân", "đi dạo từ {t}", "Thời điểm ra ngoài tốt nhất", "Không có khung giờ tốt", "Phơi đồ", "khô đến {t}", "khô cả ngày", "phơi ngoài không khô", "ngày mai", "Muỗi", "đốt nhiều nhất {t}", "Dông đang đến từ hướng {d} · tới đây sau ~{m} phút", "đang đi xa", "không tiến lại gần", "Ở trong nhà đến {t} (quy tắc 30/30)", "Đang là giờ muỗi đốt nhiều", "đợt đốt tiếp theo {t}", "Cảnh báo thời tiết", "đến {t}", "Cực kỳ nguy hiểm", "Nguy hiểm", "Trung bình", "Lưu ý", "+{n} cảnh báo khác", "Chi tiết"],
+  "id": ["Aspal / kaki hewan", "Aman untuk jalan-jalan", "Panas – jalan singkat saja", "Terlalu panas untuk kaki", "jalan-jalan mulai {t}", "Waktu terbaik di luar", "Tidak ada waktu yang baik", "Jemuran", "kering sampai {t}", "kering seharian", "tidak akan kering di luar", "besok", "Nyamuk", "paling banyak gigitan {t}", "Badai petir mendekat dari {d} · tiba dalam ~{m} mnt", "menjauh", "tidak mendekat", "Tetap di dalam sampai {t} (aturan 30/30)", "Sekarang puncak gigitan", "puncak berikutnya {t}", "Peringatan cuaca", "hingga {t}", "Ekstrem", "Berat", "Sedang", "Imbauan", "+{n} lainnya", "Detail"],
+  "ms": ["Asfalt / tapak kaki", "Selamat untuk berjalan", "Panas – jalan sekejap", "Terlalu panas untuk tapak kaki", "berjalan dari {t}", "Masa terbaik di luar", "Tiada masa yang sesuai", "Jemuran", "kering hingga {t}", "kering sepanjang hari", "tidak akan kering di luar", "esok", "Nyamuk", "paling banyak gigitan {t}", "Ribut petir menghampiri dari {d} · tiba dalam ~{m} min", "semakin menjauh", "tidak menghampiri", "Kekal di dalam hingga {t} (peraturan 30/30)", "Kini waktu puncak gigitan", "puncak seterusnya {t}", "Amaran cuaca", "hingga {t}", "Ekstrem", "Teruk", "Sederhana", "Nasihat", "+{n} lagi", "Butiran"],
+  "fil": ["Aspalto / paa", "Okay maglakad", "Mainit – saglit lang", "Masyadong mainit para sa paa", "lakad mula {t}", "Pinakamagandang oras sa labas", "Walang magandang oras", "Sampay", "tuyo hanggang {t}", "tuyo buong araw", "hindi matutuyo sa labas", "bukas", "Lamok", "pinakamaraming kagat {t}", "Paparating ang kulog at kidlat mula {d} · nandito sa ~{m} min", "papalayo", "hindi lumalapit", "Manatili sa loob hanggang {t} (30/30 rule)", "Rurok ng kagat ngayon", "susunod na rurok {t}", "Babala sa panahon", "hanggang {t}", "Matindi", "Malubha", "Katamtaman", "Abiso", "+{n} pa", "Detalye"],
+  "km": ["កៅស៊ូផ្លូវ / ជើងសត្វ", "ដើរលេងបាន", "ក្ដៅ – ដើរខ្លីៗ", "ក្ដៅពេកសម្រាប់ជើងសត្វ", "ដើរលេងចាប់ពី {t}", "ពេលល្អបំផុតនៅខាងក្រៅ", "គ្មានពេលល្អ", "ហាលខោអាវ", "ស្ងួតដល់ {t}", "ស្ងួតពេញមួយថ្ងៃ", "ហាលខាងក្រៅមិនស្ងួត", "ថ្ងៃស្អែក", "មូស", "ខាំច្រើនបំផុត {t}", "ផ្គររន្ទះកំពុងមកពីទិស {d} · មកដល់ប្រហែល {m} នាទី", "កំពុងរសាត់ចេញ", "មិនខិតមកជិត", "នៅក្នុងផ្ទះរហូតដល់ {t} (ច្បាប់ 30/30)", "ឥឡូវជាពេលមូសខាំខ្លាំង", "ពេលខាំខ្លាំងបន្ទាប់ {t}", "ការព្រមានអាកាសធាតុ", "ដល់ {t}", "ធ្ងន់ធ្ងរខ្លាំង", "ធ្ងន់ធ្ងរ", "មធ្យម", "ការជូនដំណឹង", "+{n} ទៀត", "ព័ត៌មានលម្អិត"],
+  "lo": ["ຢາງປູທາງ / ຕີນສັດ", "ພາຍ່າງຫຼິ້ນໄດ້", "ຮ້ອນ – ຍ່າງສັ້ນໆ", "ຮ້ອນເກີນໄປສຳລັບຕີນ", "ຍ່າງຫຼິ້ນໄດ້ຕັ້ງແຕ່ {t}", "ເວລາທີ່ດີທີ່ສຸດຢູ່ນອກ", "ບໍ່ມີຊ່ວງທີ່ເໝາະ", "ຕາກເຄື່ອງ", "ແຫ້ງໄດ້ຮອດ {t}", "ແຫ້ງໄດ້ໝົດມື້", "ຕາກຂ້າງນອກບໍ່ແຫ້ງ", "ມື້ອື່ນ", "ຍຸງ", "ກັດຫຼາຍສຸດ {t}", "ພາຍຸຟ້າຮ້ອງກຳລັງມາຈາກທິດ {d} · ຮອດປະມານ {m} ນາທີ", "ກຳລັງເຄື່ອນອອກໄປ", "ບໍ່ໄດ້ເຂົ້າໃກ້", "ຢູ່ໃນເຮືອນຈົນຮອດ {t} (ກົດ 30/30)", "ຕອນນີ້ຍຸງກັດຫຼາຍ", "ຊ່ວງຍຸງກັດຕໍ່ໄປ {t}", "ແຈ້ງເຕືອນສະພາບອາກາດ", "ຮອດ {t}", "ຮຸນແຮງຫຼາຍ", "ຮຸນແຮງ", "ປານກາງ", "ແຈ້ງການ", "+{n} ລາຍການ", "ລາຍລະອຽດ"],
+  "my": ["ကတ္တရာလမ်း / ခြေဖဝါး", "လမ်းလျှောက်ရန် အဆင်ပြေ", "ပူ – ခဏသာ လျှောက်ပါ", "ခြေဖဝါးအတွက် အလွန်ပူ", "{t} မှ လမ်းလျှောက်နိုင်", "အပြင်ထွက်ရန် အကောင်းဆုံးအချိန်", "သင့်တော်သောအချိန် မရှိ", "အဝတ်လှန်း", "{t} အထိ ခြောက်မည်", "တစ်နေကုန် ခြောက်မည်", "အပြင်တွင် မခြောက်ပါ", "မနက်ဖြန်", "ခြင်", "{t} တွင် အကိုက်အများဆုံး", "{d} မှ မိုးကြိုးမုန်တိုင်း လာနေသည် · ~{m} မိနစ်အတွင်း ရောက်မည်", "ဝေးသွားနေသည်", "နီးမလာပါ", "{t} အထိ အိမ်ထဲတွင်နေပါ (30/30 စည်းမျဉ်း)", "ယခု ခြင်ကိုက်အများဆုံးအချိန်", "နောက်ကိုက်ချိန် {t}", "ရာသီဥတု သတိပေးချက်", "{t} အထိ", "အလွန်ပြင်းထန်", "ပြင်းထန်", "အသင့်အတင့်", "အသိပေးချက်", "+{n} ခု ထပ်မံ", "အသေးစိတ်"],
+  "zh-Hans": ["沥青 / 爪垫", "适合遛狗", "炎热 – 短时散步", "对爪垫太烫", "{t} 起可遛狗", "最佳户外时段", "没有合适时段", "晾衣", "可晾干至 {t}", "全天可晾干", "户外晾不干", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正从{d}方向逼近 · 约 {m} 分钟后到达", "正在远离", "未靠近", "请待在室内至 {t}（30/30 规则）", "现在是叮咬高峰", "下次高峰 {t}", "天气预警", "至 {t}", "特别严重", "严重", "较重", "提示", "另有 {n} 条", "详情"],
+  "zh-Hant": ["瀝青 / 腳掌", "適合遛狗", "炎熱 – 短時散步", "對腳掌太燙", "{t} 起可遛狗", "最佳戶外時段", "沒有合適時段", "晾衣", "可晾乾至 {t}", "全天可晾乾", "戶外晾不乾", "明天", "蚊子", "叮咬高峰 {t}", "雷暴正從{d}方向逼近 · 約 {m} 分鐘後到達", "正在遠離", "未靠近", "請待在室內至 {t}（30/30 規則）", "現在是叮咬高峰", "下次高峰 {t}", "天氣警報", "至 {t}", "極嚴重", "嚴重", "中度", "提示", "另有 {n} 則", "詳情"],
+  "ja": ["路面 / 肉球", "散歩OK", "暑い – 短めに", "肉球には熱すぎ", "{t} から散歩可", "外出のベストタイム", "適した時間なし", "洗濯物", "{t} まで乾く", "一日中乾く", "外では乾かない", "明日", "蚊", "刺されやすい時間 {t}", "雷雨が{d}から接近中 · 約 {m} 分で到達", "遠ざかっています", "接近していません", "{t} まで屋内に（30/30ルール）", "今が刺されやすい時間", "次のピーク {t}", "気象警報", "{t} まで", "特別警報級", "警報級", "注意報級", "情報", "ほか {n} 件", "詳細"],
+  "ko": ["아스팔트 / 발바닥", "산책 가능", "더움 – 짧게 산책", "발바닥에 너무 뜨거움", "{t}부터 산책 가능", "외출하기 좋은 시간", "적당한 시간 없음", "빨래", "{t}까지 마름", "하루 종일 마름", "밖에서는 안 마름", "내일", "모기", "물림 최다 {t}", "뇌우가 {d} 방향에서 접근 중 · 약 {m}분 후 도달", "멀어지는 중", "접근하지 않음", "{t}까지 실내에 머무르세요 (30/30 규칙)", "지금 물림 최다 시간", "다음 최다 시간 {t}", "기상 특보", "{t}까지", "매우 심각", "심각", "보통", "안내", "외 {n}건", "자세히"],
+  "hi": ["डामर / पंजे", "टहलने के लिए ठीक", "गर्म – छोटी सैर", "पंजों के लिए बहुत गर्म", "{t} से टहलें", "बाहर जाने का सबसे अच्छा समय", "कोई अच्छा समय नहीं", "कपड़े सुखाना", "{t} तक सूखेंगे", "पूरे दिन सूखेंगे", "बाहर नहीं सूखेंगे", "कल", "मच्छर", "सबसे ज़्यादा काटते हैं {t}", "{d} से आंधी-तूफ़ान आ रहा है · लगभग {m} मिनट में यहाँ", "दूर जा रहा है", "पास नहीं आ रहा", "{t} तक घर के अंदर रहें (30/30 नियम)", "अभी काटने का चरम समय", "अगला चरम समय {t}", "मौसम चेतावनी", "{t} तक", "अत्यंत गंभीर", "गंभीर", "मध्यम", "सलाह", "+{n} और", "विवरण"],
+  "bn": ["পিচ রাস্তা / থাবা", "হাঁটার জন্য ঠিক আছে", "গরম – অল্প হাঁটুন", "থাবার জন্য খুব গরম", "{t} থেকে হাঁটা যাবে", "বাইরে যাওয়ার সেরা সময়", "ভালো সময় নেই", "কাপড় শুকানো", "{t} পর্যন্ত শুকাবে", "সারাদিন শুকাবে", "বাইরে শুকাবে না", "আগামীকাল", "মশা", "সবচেয়ে বেশি কামড়ায় {t}", "{d} দিক থেকে বজ্রঝড় এগিয়ে আসছে · প্রায় {m} মিনিটে পৌঁছাবে", "দূরে সরে যাচ্ছে", "কাছে আসছে না", "{t} পর্যন্ত ঘরে থাকুন (30/30 নিয়ম)", "এখন কামড়ের সর্বোচ্চ সময়", "পরবর্তী সর্বোচ্চ সময় {t}", "আবহাওয়া সতর্কতা", "{t} পর্যন্ত", "অত্যন্ত গুরুতর", "গুরুতর", "মাঝারি", "পরামর্শ", "+আরও {n}টি", "বিস্তারিত"],
+  "ne": ["पिच सडक / पन्जा", "हिँडाउन ठीक", "गर्मी – छोटो हिँडाइ", "पन्जाका लागि धेरै तातो", "{t} बाट हिँडाउनुहोस्", "बाहिर जाने उत्तम समय", "राम्रो समय छैन", "लुगा सुकाउने", "{t} सम्म सुक्छ", "दिनभर सुक्छ", "बाहिर सुक्दैन", "भोलि", "लामखुट्टे", "सबैभन्दा बढी टोक्ने {t}", "{d} बाट चट्याङसहितको आँधी नजिकिँदैछ · करिब {m} मिनेटमा यहाँ", "टाढा जाँदैछ", "नजिक आउँदैन", "{t} सम्म भित्रै बस्नुहोस् (30/30 नियम)", "अहिले टोक्ने चरम समय", "अर्को चरम समय {t}", "मौसम चेतावनी", "{t} सम्म", "अत्यन्त गम्भीर", "गम्भीर", "मध्यम", "सूचना", "+{n} थप", "विवरण"],
+  "si": ["තාර පාර / පාද", "ඇවිදීමට හොඳයි", "උණුසුම් – කෙටියෙන් ඇවිදින්න", "පාදවලට ඉතා උණුසුම්", "{t} සිට ඇවිදින්න", "එළියට යාමට හොඳම කාලය", "සුදුසු කාලයක් නැත", "රෙදි වියළීම", "{t} දක්වා වියළේ", "දවස පුරා වියළේ", "එළියේ වියළෙන්නේ නැත", "හෙට", "මදුරුවන්", "වැඩිම දෂ්ට කිරීම් {t}", "{d} දෙසින් ගිගුරුම් කුණාටුවක් ළං වෙයි · මිනි {m} කින් පමණ මෙහි", "ඈත් වෙමින්", "ළං නොවේ", "{t} දක්වා ඇතුළත සිටින්න (30/30 රීතිය)", "දැන් දෂ්ට කිරීම් වැඩිම කාලය", "ඊළඟ උපරිම කාලය {t}", "කාලගුණ අනතුරු ඇඟවීම", "{t} දක්වා", "ඉතා දරුණු", "දරුණු", "මධ්‍යම", "උපදෙස්", "+තවත් {n}", "විස්තර"],
+  "ta": ["தார் சாலை / பாதம்", "நடைக்கு ஏற்றது", "வெப்பம் – குறுகிய நடை", "பாதங்களுக்கு மிகவும் சூடு", "{t} முதல் நடை", "வெளியே செல்ல சிறந்த நேரம்", "நல்ல நேரம் இல்லை", "துணி காயவைத்தல்", "{t} வரை காயும்", "நாள் முழுவதும் காயும்", "வெளியே காயாது", "நாளை", "கொசுக்கள்", "அதிக கடி {t}", "{d} திசையிலிருந்து இடியுடன் கூடிய புயல் நெருங்குகிறது · சுமார் {m} நிமிடத்தில் இங்கே", "விலகிச் செல்கிறது", "நெருங்கவில்லை", "{t} வரை உள்ளே இருங்கள் (30/30 விதி)", "இப்போது அதிக கடி நேரம்", "அடுத்த உச்ச நேரம் {t}", "வானிலை எச்சரிக்கை", "{t} வரை", "மிகக் கடுமையான", "கடுமையான", "மிதமான", "அறிவுறுத்தல்", "+மேலும் {n}", "விவரங்கள்"],
 };
 
 // expand the compact source into nested key objects: I18N.th.cond["cloudy"], I18N.th.heat.normal, I18N.th.feels_like ...
@@ -289,6 +289,8 @@ function irradiance(elev, cloudPct) {
 function asphaltTemp(air, g, wind) { return air + (0.033 * g) / (1 + (wind || 0) / 30); }
 
 function num(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
+function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]); }
+const ALERT_RANK = { minor: 1, moderate: 2, severe: 3, extreme: 4 };
 function median(a) { const s = a.filter((x) => x !== null).sort((x, y) => x - y); if (!s.length) return null; const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
@@ -456,7 +458,13 @@ class TropicalWeatherCard extends HTMLElement {
       language: "auto",
       solar_radiation: null,
       insights: true,
+      alerts: null,
+      alert_areas: null,
+      alert_min_severity: "minor",
+      alert_max_age: 24,
     }, config);
+    if (typeof this._config.alerts === "string") this._config.alerts = [this._config.alerts];
+    if (typeof this._config.alert_areas === "string") this._config.alert_areas = [this._config.alert_areas];
     if (!this._config.sources.includes(this._config.weather)) this._config.sources.unshift(this._config.weather);
     this._lastKey = "";
   }
@@ -468,7 +476,7 @@ class TropicalWeatherCard extends HTMLElement {
     this._hass = hass;
     if (first || this._subscribedTo !== this._activeWeather()) this._subscribe();
     const c = this._config;
-    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust].filter(Boolean);
+    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust, ...this._alertIds()].filter(Boolean);
     if (this._radarEl) this._radarEl.hass = hass;
     this._trackLightning(first);
     const key = ids.map((id) => { const s = hass.states[id]; return s ? s.last_updated + s.state : "x"; }).join("|");
@@ -683,6 +691,103 @@ class TropicalWeatherCard extends HTMLElement {
     const d = this._num(c.lightning_distance), n = this._num(c.lightning_counter), az = this._num(c.lightning_azimuth);
     const active = d !== null && (n === null || n > 0);
     return { active, d, n: n || 0, az, near: active && d <= (num(c.lightning_alert_km) || 15) };
+  }
+
+  // ---- official weather warnings -------------------------------------------------
+  // alerts: list of entity ids; the word "auto" adds every CAP alert sensor
+  // (an entity with "severity" plus "geocodes" or "identifier", e.g. the CAP Alerts integration)
+  _alertIds() {
+    const c = this._config;
+    if (!c.alerts || !c.alerts.length || !this._hass) return [];
+    const out = [];
+    for (const a of c.alerts) {
+      if (a === "auto") {
+        for (const [id, st] of Object.entries(this._hass.states)) {
+          const at = st.attributes;
+          if (at && at.severity !== undefined && (at.geocodes !== undefined || at.identifier !== undefined) && !out.includes(id)) out.push(id);
+        }
+      } else if (!out.includes(a)) out.push(a);
+    }
+    return out;
+  }
+
+  _alerts() {
+    const c = this._config;
+    const now = Date.now();
+    const minRank = ALERT_RANK[String(c.alert_min_severity || "minor").toLowerCase()] || 1;
+    const areas = (c.alert_areas || []).map((x) => String(x).toLowerCase());
+    const pick = (at, ...keys) => { for (const k of keys) if (at[k] !== undefined && at[k] !== null && at[k] !== "") return at[k]; return null; };
+    const time = (v) => { const t = Date.parse(v); return Number.isFinite(t) ? t : null; };
+    const list = [];
+    for (const id of this._alertIds()) {
+      const st = this._state(id);
+      if (!st) continue;
+      const at = st.attributes || {};
+      const domain = id.split(".")[0];
+      const state = String(st.state).toLowerCase();
+      if (["unavailable", "unknown", "off", "none", "no", "0", "", "inactive", "expired", "cancel"].includes(state) && domain !== "event") continue;
+      if (domain === "event") {
+        // feed / event entities: the state is the time of the last event
+        const t = time(st.state);
+        if (t === null || now - t > (num(c.alert_max_age) || 24) * 3600000) continue;
+      }
+      if (String(pick(at, "status") || "actual").toLowerCase() !== "actual") continue;
+      if (String(pick(at, "msg_type", "msgType", "phase") || "").toLowerCase() === "cancel") continue;
+      const expires = time(pick(at, "expires", "expires_at", "ends", "end", "end_time"));
+      if (expires !== null && expires < now) continue;
+      const onset = time(pick(at, "onset", "effective", "start", "start_time"));
+      // area filter only for entities that say where they apply
+      const geo = at.geocodes ? JSON.stringify(at.geocodes).toLowerCase() : "";
+      const areaTxt = String(pick(at, "areaDesc", "area_desc", "area", "areas") || "").toLowerCase();
+      if (areas.length && (geo || areaTxt) && !areas.some((a) => geo.includes(a) || areaTxt.includes(a))) continue;
+      let sev = String(pick(at, "severity", "awareness_level") || "").toLowerCase();
+      if (/4|red|extreme/.test(sev)) sev = "extreme"; else if (/3|orange|severe/.test(sev)) sev = "severe"; else if (/2|yellow|moderate/.test(sev)) sev = "moderate"; else sev = "minor";
+      if (ALERT_RANK[sev] < minRank) continue;
+      const title = pick(at, "headline", "event", "title") || (domain === "sensor" && isNaN(parseFloat(st.state)) ? st.state : null) || at.friendly_name || T("warning");
+      list.push({
+        id, sev, title: String(title),
+        event: String(pick(at, "event", "title") || ""),
+        text: String(pick(at, "description", "summary", "content") || ""),
+        instruction: String(pick(at, "instruction") || ""),
+        link: pick(at, "web", "link", "url"),
+        sender: pick(at, "sender_name", "senderName", "sender"),
+        expires, onset,
+        when: time(pick(at, "sent", "published")) || time(st.state) || Date.parse(st.last_changed),
+      });
+    }
+    // drop feed items that repeat a structured CAP alert with the same event name
+    const capEvents = new Set(list.filter((a) => !a.id.startsWith("event.")).map((a) => a.event.toLowerCase()).filter(Boolean));
+    const out = list.filter((a) => !(a.id.startsWith("event.") && capEvents.has(a.title.toLowerCase())));
+    out.sort((a, b) => ALERT_RANK[b.sev] - ALERT_RANK[a.sev] || b.when - a.when);
+    return out;
+  }
+
+  _fmtWhen(t) {
+    const d = new Date(t);
+    const sameDay = this._dayKey(d) === this._dayKey(new Date());
+    return (sameDay ? "" : this._dayName(d) + " ") + this._fmtTime(d);
+  }
+  _dayKey(d) { return new Intl.DateTimeFormat("en-CA", { timeZone: this._tz() }).format(d); }
+
+  _alertBanner() {
+    const all = this._alerts();
+    if (!all.length) return "";
+    const tri = (cls) => `<svg class="atri ${cls}" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M12 2.5 1.5 21h21L12 2.5z" fill="currentColor" opacity=".22"/><path d="M12 2.5 1.5 21h21L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="11" y="9" width="2" height="6.5" rx="1" fill="currentColor"/><circle cx="12" cy="18" r="1.2" fill="currentColor"/></svg>`;
+    const top = all[0];
+    const sevLabel = (a) => T("sev_" + a.sev);
+    const meta = (a) => [sevLabel(a), a.expires ? T("valid_until", { t: this._fmtWhen(a.expires) }) : (a.onset && a.onset > Date.now() ? "▸ " + this._fmtWhen(a.onset) : this._fmtWhen(a.when))].filter(Boolean).join(" · ");
+    const open = !!this._alertOpen;
+    const details = open ? `<div class="adet">${all.map((a, i) => `
+        <div class="aitem">
+          ${i > 0 || all.length > 1 ? `<div class="ahead"><span class="adot ${a.sev}"></span><b>${esc(a.title)}</b><small>${esc(meta(a))}</small></div>` : ""}
+          ${a.text ? `<p>${esc(a.text.length > 700 ? a.text.slice(0, 700) + " …" : a.text).replace(/\n+/g, "<br>")}</p>` : ""}
+          ${a.instruction ? `<p class="ainst">${esc(a.instruction)}</p>` : ""}
+          <div class="asrc">${a.sender ? esc(a.sender) : ""}${a.link && /^https?:/i.test(a.link) ? `${a.sender ? " · " : ""}<a href="${esc(a.link)}" target="_blank" rel="noopener noreferrer">${T("details")} ↗</a>` : ""}</div>
+        </div>`).join("")}</div>` : "";
+    return `<div class="alert wx ${top.sev}${open ? " open" : ""}" data-alert="1" role="button" tabindex="0">
+        <div class="arow">${tri(top.sev)}<span class="atxt"><b>${esc(top.title)}</b><small>${esc(meta(top))}</small></span>${all.length > 1 ? `<em class="amore">${T("more_alerts", { n: all.length - 1 })}</em>` : ""}<i class="achev">${open ? "▴" : "▾"}</i></div>
+        ${details}
+      </div>`;
   }
 
   _cyclone() {
@@ -1078,7 +1183,12 @@ class TropicalWeatherCard extends HTMLElement {
         this._ro = new ResizeObserver((en) => { const w = en[0].contentRect.width; const b = this._colsFor(w); this._cw = w; if (b !== this._colsNow) this._render(); });
         this._ro.observe(this._root.content);
       }
-      this._root.content.addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) { this._tab = b.dataset.tab; this._render(); } });
+      this._root.content.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-tab]"); if (b) { this._tab = b.dataset.tab; this._render(); return; }
+        if (e.target.closest("a")) return;
+        if (e.target.closest("[data-alert]")) { this._alertOpen = !this._alertOpen; this._render(); }
+      });
+      this._root.content.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.closest && e.target.closest("[data-alert]")) { e.preventDefault(); this._alertOpen = !this._alertOpen; this._render(); } });
     }
     const skyKey = [heroIcon, sun.up].join("|");
     if (skyKey !== this._skyKey) {
@@ -1111,6 +1221,7 @@ class TropicalWeatherCard extends HTMLElement {
       tide ? `<div class="tile"><span class="tl">${T("tide")}</span><b>${tide.now.toFixed(1)}<small> m</small></b><span class="ts">${tide.rising ? "▲ " + T("rising") : "▼ " + T("falling")} · ${tide.next.type === "high" ? T("high") : T("low")} ${this._fmtTime(new Date(tide.next.t))}</span></div>` : ""
     ].filter(Boolean);
     this._root.content.innerHTML = `
+      ${this._alertBanner()}
       ${cyc ? `<div class="alert cyc">${this._icon("tropical-cyclone", 30)}<span>${T("cond.tropical-cyclone")}: <b>${cyc.name}</b>${cyc.dist !== null ? ` · ${T("km_away", { d: Math.round(cyc.dist) })}` : ""}</span></div>` : ""}
       ${lt && lt.near && storm.trend !== "approach" ? `<div class="alert bolt">${this._icon("lightning", 30)}<span>${T("lightning")} <b>${lt.d.toFixed(0)} km</b>${lt.az !== null ? ` ${T("to_the", { d: COMPASS[Math.round(lt.az / 45) % 8] })}` : ""} · ${T("strikes", { n: lt.n })}</span></div>` : ""}
       ${storm.trend === "approach" && lt && lt.active && (storm.eta <= 60 || lt.d <= 30) ? `<div class="alert bolt">${this._icon("lightning-rainy", 30)}<span>${T("storm_approach", { d: lt.az !== null ? COMPASS[Math.round(lt.az / 45) % 8] : "–", m: storm.eta })}</span></div>` : ""}
@@ -1156,6 +1267,31 @@ TropicalWeatherCard.styles = `
   .alert .wxi { flex: 0 0 30px; }
   .alert.bolt { background: rgba(250,204,21,.12); border: 1px solid rgba(250,204,21,.55); animation: pulse 1.6s ease-in-out infinite; }
   .alert.cyc { background: rgba(239,68,68,.14); border: 1px solid rgba(239,68,68,.6); animation: pulse 1.6s ease-in-out infinite; }
+  .alert.wx { display: block; cursor: pointer; padding: 9px 12px; }
+  .alert.wx .arow { display: flex; align-items: center; gap: 10px; }
+  .alert.wx .atri { flex: 0 0 28px; }
+  .alert.wx .atxt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .alert.wx .atxt b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert.wx .atxt small { font-size: 12px; opacity: .8; margin-top: 1px; }
+  .alert.wx .amore { font-style: normal; font-size: 11px; padding: 2px 8px; border-radius: 9px; background: rgba(255,255,255,.1); white-space: nowrap; }
+  .alert.wx .achev { font-style: normal; opacity: .6; font-size: 12px; }
+  .alert.wx.minor { background: rgba(56,189,248,.10); border: 1px solid rgba(56,189,248,.45); }
+  .alert.wx.minor .atri, .adot.minor { color: #38bdf8; }
+  .alert.wx.moderate { background: rgba(250,204,21,.11); border: 1px solid rgba(250,204,21,.5); }
+  .alert.wx.moderate .atri, .adot.moderate { color: #facc15; }
+  .alert.wx.severe { background: rgba(249,115,22,.14); border: 1px solid rgba(249,115,22,.6); }
+  .alert.wx.severe .atri, .adot.severe { color: #fb923c; }
+  .alert.wx.extreme { background: rgba(239,68,68,.16); border: 1px solid rgba(239,68,68,.7); animation: pulse 1.6s ease-in-out infinite; }
+  .alert.wx.extreme .atri, .adot.extreme { color: #f87171; }
+  .adet { margin: 8px 0 2px 38px; font-size: 13px; line-height: 1.45; cursor: auto; }
+  .adet p { margin: 6px 0; opacity: .9; }
+  .adet .ainst { font-weight: 500; opacity: 1; }
+  .aitem + .aitem { border-top: 1px solid rgba(255,255,255,.1); margin-top: 8px; padding-top: 8px; }
+  .ahead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .ahead small { opacity: .7; font-size: 11.5px; }
+  .adot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block; }
+  .asrc { font-size: 11.5px; opacity: .7; margin-top: 4px; }
+  .asrc a { color: inherit; text-decoration: underline; }
   @keyframes pulse { 50% { box-shadow: 0 0 14px rgba(255,200,0,.35); } }
   .tile.hot { border-color: rgba(250,204,21,.7); box-shadow: 0 0 10px rgba(250,204,21,.35); animation: pulse 1.6s ease-in-out infinite; }
   .tile.hot b { color: #facc15; }

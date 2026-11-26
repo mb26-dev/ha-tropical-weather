@@ -58,6 +58,9 @@ Most weather cards are made for four seasons. In the tropics the questions are d
 - **Laundry** – does it dry outside today, until when, or not at all.
 - **Mosquitoes** – Aedes (dengue) risk from temperature, humidity and recent and coming rain, with the peak biting times.
 
+**Official warnings**
+- **Warning banner** – shows the warnings of your national weather service on top of the card, coloured by severity (advisory, moderate, severe, extreme), with validity, instructions and a link to the bulletin. Works with CAP alert sensors (e.g. the [CAP Alerts](https://github.com/seevee/cap_alerts) integration with its WMO source, which includes TMD and many other national weather services), Meteoalarm, feedreader events and any sensor with a warning text. Filter it to your province or region with `alert_areas`.
+
 **Thunderstorms and cyclones**
 - **Storm approach** – with the [Blitzortung](https://github.com/mrk-its/homeassistant-blitzortung) integration the card tracks every strike and calculates whether the storm is approaching, passing or moving away: *"Thunderstorm approaching from SW · overhead in ~11 min"*.
 - **30/30 rule** – after a strike within 10 km: *"Stay indoors until 17:42"*.
@@ -123,6 +126,10 @@ lightning_distance: sensor.home_lightning_distance
 lightning_counter: sensor.home_lightning_counter
 lightning_azimuth: sensor.home_lightning_azimuth
 cyclone: sensor.nearest_tropical_cyclone
+alerts:                       # official warnings banner
+  - auto                      # every CAP alert sensor
+  - event.latest_alerts_from_thai_meteorological_department_tmd
+alert_areas: [TH-81, TH-83]   # ISO 3166-2 codes or area names
 radar_card:
   type: custom:radarwise-card
   entity: weather.pirateweather
@@ -147,6 +154,10 @@ radar_card:
 | `lightning_alert_km` | `15` | Distance for the lightning alert. |
 | `cyclone` | – | Sensor whose state is the storm name and with a `distance_km` (or `distance`) attribute. |
 | `cyclone_alert_km` | `400` | Distance at which a cyclone takes over the sky scene. |
+| `alerts` | – | Warning entities for the banner. `auto` adds every CAP alert sensor (an entity with `severity` and `geocodes` or `identifier`). Also accepts event entities (feedreader), Meteoalarm and plain sensors whose state is the warning. |
+| `alert_areas` | – | Only show warnings whose `geocodes` or area description contain one of these codes or names (e.g. `TH-81`, `Krabi`). Warnings without area information are always shown. |
+| `alert_min_severity` | `minor` | Lowest severity shown: `minor`, `moderate`, `severe` or `extreme`. Warnings without a severity count as `minor`. |
+| `alert_max_age` | `24` | Hours an event entity (e.g. a feed item) stays visible when it has no expiry time. |
 | `wind_gust` | weather attribute | Gust sensor in km/h; by default `wind_gust_speed` of the weather entity. |
 | `radar_card` | – | Any card config; shown in the *Radar* tab. |
 | `climate` | `auto` | Heat stress bands: `auto` (from latitude), `tropical`, `subtropical` or `temperate`. |
