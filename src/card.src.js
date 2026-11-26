@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.1.0";
+const TWC_VERSION = "1.1.1";
 
 /*__I18N__*/
 let LANG = "en";
@@ -656,7 +656,7 @@ class TropicalWeatherCard extends HTMLElement {
       { k: "pressure", label: T("pressure"), unit: " hPa", dec: 0 },
     ];
     const srcs = this._config.sources.map((id) => ({ id, s: this._state(id) })).filter((x) => x.s);
-    const short = (id) => { const s = this._state(id); const a = (s && s.attributes.attribution) || id; if (/pirate/i.test(a + id)) return "Pirate"; if (/openweather/i.test(a + id)) return "OWM"; if (/met\.no/i.test(a)) return "Met.no"; return (s && s.attributes.friendly_name) || id; };
+    const short = (id) => { const s = this._state(id); const a = (s && s.attributes.attribution) || id; if (/pirate/i.test(a + id)) return "Pirate"; if (/openweather/i.test(a + id)) return "OWM"; if (/met\.no/i.test(a)) return "Met.no"; if (/tmd|thai meteorological/i.test(a + id)) return "TMD"; return (s && s.attributes.friendly_name) || id; };
     const local = { temperature: num(this._state(this._config.temperature)?.state), humidity: num(this._state(this._config.humidity)?.state), pressure: this._localPressure() };
     const tolerance = { temperature: 1.5, wind_speed: 5, humidity: 8, pressure: 2 };
     return metrics.map((m) => {
