@@ -154,7 +154,7 @@ radar_card:
 | `lightning_alert_km` | `15` | Distance for the lightning alert. |
 | `cyclone` | – | Sensor whose state is the storm name and with a `distance_km` (or `distance`) attribute. |
 | `cyclone_alert_km` | `400` | Distance at which a cyclone takes over the sky scene. |
-| `rain_consensus` | `true` | The rain outlook, laundry and best-time tiles ask every weather entity in `sources`, not only the main one. A model counts as "rain" with a probability of 50 % or more, or with 0.3 mm or more when it gives no probability. The outlook shows how many models agree. |
+| `rain_consensus` | `true` | The rain outlook, laundry and best-time tiles ask every weather entity in `sources`, not only the main one. A model counts as "rain" with a probability of 50 % or more, or with 0.3 mm or more when it gives no probability. The outlook shows how many models agree; the laundry tile only counts an hour as wet when more than half of the models agree. |
 | `alerts` | – | Warning entities for the banner. `auto` adds every CAP alert sensor (an entity with `severity` and `geocodes` or `identifier`). Also accepts event entities (feedreader), Meteoalarm and plain sensors whose state is the warning. |
 | `alert_areas` | – | Only show warnings whose `geocodes` or area description contain one of these codes or names (e.g. `TH-81`, `Krabi`). Warnings without area information are always shown. |
 | `alert_min_severity` | `minor` | Lowest severity shown: `minor`, `moderate`, `severe` or `extreme`. Warnings without a severity count as `minor`. |
@@ -188,6 +188,7 @@ Codes: `en de th vi id ms fil km lo my zh-Hans zh-Hant ja ko hi bn ne si ta`. Co
 - **Asphalt temperature**: air temperature + 0.033 × solar radiation, reduced by wind. Close to measured dark asphalt in full sun; it is a guide, not a measurement.
 - **Solar radiation** (when no sensor is set): sun elevation from your coordinates, a clear-sky model (Haurwitz) and the forecast cloud cover (Kasten–Czeplak).
 - **Storm approach**: a linear fit of the strike distances of the last 40 minutes. At least three strikes over six minutes are needed.
+- **Laundry**: daylight hours (sun above 12°) without rain and below 92 % humidity. The current hour uses your own `humidity` sensor. Drying time depends on humidity: about 1.5 h below 65 %, 2.5 h below 80 %, otherwise 4 h. ✓ = enough time, ≈ = short window or rain close, ✗ = raining, dark or too humid.
 - **Mosquito risk**: a simple index of mean temperature (26–32 °C is ideal for Aedes), humidity and rain in the next two days. It shows conditions, not actual mosquito counts.
 
 ## Development
