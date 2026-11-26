@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.4.0";
+const TWC_VERSION = "1.5.0";
 
 /*__I18N__*/
 let LANG = "en";
@@ -455,7 +455,7 @@ class TropicalWeatherCard extends HTMLElement {
     const pl = asNow < 40 ? ["paws_ok", "#4caf50"] : asNow < 52 ? ["paws_hot", "#ff9800"] : ["paws_danger", "#f44336"];
     let pawSub = T(pl[0]);
     if (asNow >= 40) { const ok = rows.find((r) => r.t > Date.now() && r.asph < 40 && r.pp < 50); if (ok) pawSub += ` · ${T("walk_from", { t: this._fmtTime(new Date(ok.t)) })}`; }
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:paw"></ha-icon>${T("paws")}</span><b style="color:${pl[1]}">${Math.round(asNow)}°</b><span class="ts">${pawSub}</span></div>`);
+    tiles.push(`<div class="tile ins"><span class="tl">${T("paws")}</span><img class="tic" src="${TILE_ICONS.paws}" alt=""><b style="color:${pl[1]}">${Math.round(asNow)}°</b><span class="ts">${pawSub}</span></div>`);
 
     // 2) best time outside: dry, below the hot band, no thunder, 05-22 h local
     // from civil dawn (sun above -6 deg) until 22 h local
@@ -474,7 +474,7 @@ class TropicalWeatherCard extends HTMLElement {
     const span = (w) => `${w.start <= Date.now() ? T("now") : this._hh(w.start)}–${this._hh(w.end + 3600000)}`;
     const w1 = wins[0], w2 = wins[1];
     const bestSub = w1 ? dayOf(w1) + (w2 ? ` · + ${dayOf(w2) !== dayOf(w1) ? dayOf(w2) + " " : ""}${span(w2)}` : "") : T("none_today");
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:walk"></ha-icon>${T("best_time")}</span><b class="sm">${w1 ? span(w1) : "–"}</b><span class="ts">${bestSub}</span></div>`);
+    tiles.push(`<div class="tile ins"><span class="tl">${T("best_time")}</span><img class="tic" src="${TILE_ICONS.best}" alt=""><b class="sm">${w1 ? span(w1) : "–"}</b><span class="ts">${bestSub}</span></div>`);
 
     // 3) laundry: daylight hours (sun > 12 deg) without rain from now, or tomorrow when it is dark
     const isDay = (r) => r.elev > 12;
@@ -499,7 +499,7 @@ class TropicalWeatherCard extends HTMLElement {
     else if (n && avail >= 0.5) { lSub = prefix + T("dries_until", { t: this._fmtTime(new Date(until)) }); lCol = "#ff9800"; lMark = "≈"; }
     else if (n && n < day.length) { lSub = prefix + T("rain_from", { t: this._fmtTime(new Date(until)) }); lCol = "#ff9800"; lMark = "≈"; }
     else { lSub = prefix + T("laundry_bad"); lCol = "#f44336"; lMark = "✗"; }
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:tshirt-crew-outline"></ha-icon>${T("laundry")}</span><b class="sm" style="color:${lCol}">${lMark}</b><span class="ts">${lSub}</span></div>`);
+    tiles.push(`<div class="tile ins"><span class="tl">${T("laundry")}</span><img class="tic" src="${TILE_ICONS.laundry}" alt=""><b class="sm" style="color:${lCol}">${lMark}</b><span class="ts">${lSub}</span></div>`);
 
     // 4) mosquitoes (Aedes): warm 26-32 deg, humid, recent / coming rain = breeding water
     const nx24 = rows.slice(0, 24);
@@ -508,7 +508,7 @@ class TropicalWeatherCard extends HTMLElement {
     let sc = tm >= 26 && tm <= 32 ? 2 : tm >= 22 && tm <= 35 ? 1 : 0;
     sc += rh >= 70 ? 1 : 0; sc += rain48 >= 20 ? 2 : rain48 >= 5 ? 1 : 0;
     const ml = sc >= 4 ? ["uv.high", "#f44336"] : sc >= 2 ? ["uv.moderate", "#ffc107"] : ["uv.low", "#4caf50"];
-    tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:bug-outline"></ha-icon>${T("mosquitoes")}</span><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText() : "&nbsp;"}</span>${this._dengueLine()}</div>`);
+    tiles.push(`<div class="tile ins"><span class="tl">${T("mosquitoes")}</span><img class="tic" src="${TILE_ICONS.mosq}" alt=""><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText() : "&nbsp;"}</span>${this._dengueLine()}</div>`);
 
     return `<div class="tiles ins-row">${tiles.join("")}</div>`;
   }
@@ -1186,8 +1186,9 @@ TropicalWeatherCard.styles = `
   .content { container-type: inline-size; }
   .tiles { grid-auto-flow: row dense; }
   .ins-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .tile.ins .tl { display: flex; align-items: center; gap: 4px; }
-  .tile.ins ha-icon { --mdc-icon-size: 14px; width: 14px; height: 14px; color: var(--gold); opacity: .9; }
+  .tile.ins { position: relative; }
+  .tile.ins .tl { padding-right: 44px; }
+  .tile.ins .tic { position: absolute; top: 5px; right: 5px; width: 44px; height: 44px; pointer-events: none; filter: drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
   .tile b.sm { font-size: 17px; }
   @container (max-width: 520px) { .ins-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .content > :first-child { margin-top: -18px; position: relative; z-index: 2; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background-color: rgba(20,24,32,.72); }
