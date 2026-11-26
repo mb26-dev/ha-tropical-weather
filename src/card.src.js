@@ -673,8 +673,10 @@ class TropicalWeatherCard extends HTMLElement {
       const pos = (v) => ((v - a) / (b - a)) * 100;
       // labels of neighbouring dots closer than ~13 % alternate above the line so they never overlap
       const sorted = vals.map((x) => ({ ...x, p: pos(x.v) })).sort((x, y) => x.p - y.p);
+      // the local (gold) label always sits above the line, so a source next to it stays below
+      const locP = local[m.k] != null ? pos(local[m.k]) : null;
       let lastBelow = -99;
-      sorted.forEach((x) => { x.up = x.p - lastBelow < 13; if (!x.up) lastBelow = x.p; });
+      sorted.forEach((x) => { x.up = x.p - lastBelow < 13 && (locP === null || Math.abs(x.p - locP) >= 13); if (!x.up) lastBelow = x.p; });
       const dots = sorted.map((x) => `<span class="dot${x.up ? " up" : ""}" style="left:${x.p}%" title="${x.n}: ${x.v.toFixed(m.dec)}${m.unit}"><i>${x.n}</i></span>`).join("")
         + (local[m.k] != null ? `<span class="dot loc" style="left:${pos(local[m.k])}%" title="${T("measured")}: ${local[m.k].toFixed(m.dec)}${m.unit}"><i>${T("local")}</i></span>` : "");
       const shown = local[m.k] != null ? local[m.k] : med;
