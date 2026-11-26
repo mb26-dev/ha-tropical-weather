@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.2.4";
+const TWC_VERSION = "1.3.0";
 
 /*__I18N__*/
 let LANG = "en";
@@ -223,6 +223,8 @@ class TropicalWeatherCard extends HTMLElement {
       alert_min_severity: "minor",
       alert_max_age: 24,
       rain_consensus: true,
+      observed_condition: null,
+      observed_max_age: 45,
     }, config);
     if (typeof this._config.alerts === "string") this._config.alerts = [this._config.alerts];
     if (typeof this._config.alert_areas === "string") this._config.alert_areas = [this._config.alert_areas];
@@ -237,7 +239,7 @@ class TropicalWeatherCard extends HTMLElement {
     this._hass = hass;
     if (first || this._subscribedTo !== this._subKey()) this._subscribe();
     const c = this._config;
-    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust, ...this._alertIds()].filter(Boolean);
+    const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust, c.observed_condition, ...this._alertIds()].filter(Boolean);
     if (this._radarEl) this._radarEl.hass = hass;
     this._trackLightning(first);
     const key = ids.map((id) => { const s = hass.states[id]; return s ? s.last_updated + s.state : "x"; }).join("|");
@@ -279,6 +281,23 @@ class TropicalWeatherCard extends HTMLElement {
     }
   }
 
+  // observed weather right now (e.g. a camera check written into an input_select / sensor with
+  // weather condition states); null when not set, unknown or older than observed_max_age minutes
+  _observed() {
+    const id = this._config.observed_condition;
+    const st = id && this._state(id);
+    if (!st) return null;
+    const cond = String(st.state);
+    if (!["sunny", "clear-night", "partlycloudy", "cloudy", "fog", "windy", "rainy", "pouring", "lightning", "lightning-rainy", "snowy", "hail"].includes(cond)) return null;
+    const seen = Date.parse(st.last_reported || st.last_updated || st.last_changed);
+    const maxAge = (num(this._config.observed_max_age) ?? 45) * 60000;
+    if (!Number.isFinite(seen) || Date.now() - seen > maxAge) return null;
+    return { cond, wet: ["rainy", "pouring", "lightning-rainy", "hail"].includes(cond) };
+  }
+
+  // true when a forecast entry covers the current moment
+  _isNowHour(x) { const t = Date.parse(x.datetime); return t <= Date.now() && Date.now() < t + 3600000; }
+
   // rain votes of all models for the hour of a main-forecast entry: a model votes "rain" with a
   // probability of 50 % or more, or - if it gives no probability (Met.no, TMD) - 0.3 mm or more
   _rainVote(x) {
@@ -292,13 +311,17 @@ class TropicalWeatherCard extends HTMLElement {
     const votes = entries.filter(wet).length;
     const mms = entries.map((e) => num(e.precipitation) || 0).sort((a, b) => a - b);
     const mid = mms.length % 2 ? mms[(mms.length - 1) / 2] : (mms[mms.length / 2 - 1] + mms[mms.length / 2]) / 2;
-    return { votes, n: entries.length, frac: votes / entries.length, mm: mid, thunder: entries.some((e) => String(e.condition).startsWith("lightning")) };
+    const res = { votes, n: entries.length, frac: votes / entries.length, mm: mid, thunder: entries.some((e) => String(e.condition).startsWith("lightning")) };
+    // what is seen outside beats every model for the current hour
+    const obs = this._isNowHour(x) && this._observed();
+    if (obs) return { ...res, votes: obs.wet ? res.n : 0, frac: obs.wet ? 1 : 0, mm: obs.wet ? Math.max(res.mm, obs.cond === "pouring" ? 5 : 1) : 0, thunder: obs.wet && res.thunder, observed: true };
+    return res;
   }
 
   // probability used by the day insights: share of models expecting rain when several models are there
   _ppAt(x) {
     const v = this._rainVote(x);
-    return v.n >= 2 ? Math.round(v.frac * 100) : (num(x.precipitation_probability) || 0);
+    return v.n >= 2 || v.observed ? Math.round(v.frac * 100) : (num(x.precipitation_probability) || 0);
   }
 
   // ---------- helpers ----------
@@ -694,7 +717,8 @@ class TropicalWeatherCard extends HTMLElement {
       const ic = this._config.tropical_mode && maxRate >= 12 ? "tropical-monsoon" : (thunder ? "lightning-rainy" : (most / m >= 0.75 ? "pouring" : "rainy"));
       return { text: `${lead} · ${T("until", { t: t1 })} · ${T("models_agree", { n: most, m })} · ${mm.toFixed(1)} mm`, cls: most / m >= 0.75 ? "warn" : "info", icon: ic };
     }
-    const p = h.map((x) => num(x.precipitation_probability) || 0);
+    const obs = this._observed();
+    const p = h.map((x) => (obs && this._isNowHour(x) ? (obs.wet ? 100 : 0) : (num(x.precipitation_probability) || 0)));
     const start = p.slice(0, 12).findIndex((v) => v >= 50);
     if (start === -1) {
       const mx = Math.max(...p.slice(0, 12));
@@ -966,7 +990,8 @@ class TropicalWeatherCard extends HTMLElement {
     if (!w) { this._root = null; this._skyKey = null; this.shadowRoot.innerHTML = `<ha-card style="padding:16px">${T("entity_missing", { e: c.weather })}</ha-card>`; return; }
     const a = w.attributes;
     const sun = this._sunInfo();
-    let cond = w.state;
+    const obsNow = this._observed();
+    let cond = obsNow ? obsNow.cond : w.state;
     if (cond === "sunny" && !sun.up) cond = "clear-night";
     const hourly = this._hourly;
     const nowH = hourly && hourly.find((h) => Date.parse(h.datetime) + 3600000 > Date.now());
@@ -987,7 +1012,7 @@ class TropicalWeatherCard extends HTMLElement {
     const wsList = c.sources.map((id) => this._attr(id, "wind_speed"));
     const ws = median(wsList);
     const wb = num(a.wind_bearing);
-    let heroIcon = resolveWeatherIcon(cond, { precipitationRate: nowH ? num(nowH.precipitation) || 0 : 0, uvIndex: num(a.uv_index) ?? (nowH ? num(nowH.uv_index) || 0 : 0), apparentTemp: hi || 0, windSpeed: ws || 0, tropicalMode: c.tropical_mode, heatFrom: this._heatFrom() });
+    let heroIcon = resolveWeatherIcon(cond, { precipitationRate: obsNow && !obsNow.wet ? 0 : (nowH ? num(nowH.precipitation) || 0 : 0), uvIndex: num(a.uv_index) ?? (nowH ? num(nowH.uv_index) || 0 : 0), apparentTemp: hi || 0, windSpeed: ws || 0, tropicalMode: c.tropical_mode, heatFrom: this._heatFrom() });
     if (!sun.up && heroIcon === "tropical-heat") heroIcon = cond;
     const cyc = this._cyclone();
     if (c.tropical_mode && cyc && cyc.near) heroIcon = "tropical-cyclone";
@@ -1031,7 +1056,7 @@ class TropicalWeatherCard extends HTMLElement {
     }
     this._root.overlay.innerHTML = `
         <div class="htop">
-          <div class="hl">${this._icon(heroIcon, 64)}<div><div class="place">${name}</div><div class="cond">${((k) => { const v = T("cond." + k); return v.startsWith("cond.") ? k : v; })(heroIcon !== cond && heroIcon.startsWith("tropical") ? heroIcon : cond)}</div>${wid !== c.weather ? `<div class="fb">↺ ${(w.attributes && w.attributes.friendly_name) || wid}</div>` : ""}</div></div>
+          <div class="hl">${this._icon(heroIcon, 64)}<div><div class="place">${name}</div><div class="cond">${((k) => { const v = T("cond." + k); return v.startsWith("cond.") ? k : v; })(heroIcon !== cond && heroIcon.startsWith("tropical") ? heroIcon : cond)}${obsNow ? ` <span class="gold odot" title="${T("measured")}">●</span>` : ""}</div>${wid !== c.weather ? `<div class="fb">↺ ${(w.attributes && w.attributes.friendly_name) || wid}</div>` : ""}</div></div>
           <div class="sunbox">${sun.up ? "☀︎ ↓" : "☀︎ ↑"} ${this._fmtTime(new Date(sun.up ? sun.set : sun.rise))}<br><span>${dl}</span></div>
         </div>
         <div class="hbot">
@@ -1163,6 +1188,7 @@ TropicalWeatherCard.styles = `
   .hhum { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
   .hhum b { font-weight: 600; }
   .hhum .gold { font-size: 9px; }
+  .cond .odot { font-size: 10px; vertical-align: middle; }
   .temp .tdot { font-size: 9px; vertical-align: top; margin-left: 3px; opacity: 1; }
   .wg { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 4px; }
   .wg svg { width: 100%; height: 54px; display: block; }

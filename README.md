@@ -126,6 +126,7 @@ lightning_distance: sensor.home_lightning_distance
 lightning_counter: sensor.home_lightning_counter
 lightning_azimuth: sensor.home_lightning_azimuth
 cyclone: sensor.nearest_tropical_cyclone
+observed_condition: input_select.sky_check   # what a camera sees right now
 alerts:                       # official warnings banner
   - auto                      # every CAP alert sensor
   - event.latest_alerts_from_thai_meteorological_department_tmd
@@ -155,6 +156,8 @@ radar_card:
 | `cyclone` | – | Sensor whose state is the storm name and with a `distance_km` (or `distance`) attribute. |
 | `cyclone_alert_km` | `400` | Distance at which a cyclone takes over the sky scene. |
 | `rain_consensus` | `true` | The rain outlook, laundry and best-time tiles ask every weather entity in `sources`, not only the main one. A model counts as "rain" with a probability of 50 % or more, or with 0.3 mm or more when it gives no probability. The outlook shows how many models agree; the laundry tile only counts an hour as wet when more than half of the models agree. |
+| `observed_condition` | – | An entity whose state is a weather condition seen right now (`sunny`, `partlycloudy`, `cloudy`, `rainy`, `pouring`, ...), for example an `input_select` filled from your outdoor cameras. For the current hour it overrules every model: hero condition (gold ● marker), rain outlook, laundry and best time. `unknown` or an old value is ignored. See [Observed weather from cameras](#observed-weather-from-cameras). |
+| `observed_max_age` | `45` | Minutes after which `observed_condition` counts as outdated. |
 | `alerts` | – | Warning entities for the banner. `auto` adds every CAP alert sensor (an entity with `severity` and `geocodes` or `identifier`). Also accepts event entities (feedreader), Meteoalarm and plain sensors whose state is the warning. |
 | `alert_areas` | – | Only show warnings whose `geocodes` or area description contain one of these codes or names (e.g. `TH-81`, `Krabi`). Warnings without area information are always shown. |
 | `alert_min_severity` | `minor` | Lowest severity shown: `minor`, `moderate`, `severe` or `extreme`. Warnings without a severity count as `minor`. |
@@ -168,6 +171,81 @@ radar_card:
 | `insights` | `true` | Day planner row (paws, best time, laundry, mosquitoes). |
 | `show_hours` | `24` | Hours in the hourly chart. |
 | `asset_path` | – | Folder with an alternative icon and background pack, see below. |
+
+### Observed weather from cameras
+
+Forecast models often expect rain while the sun is shining. If you have outdoor cameras and an AI Task entity (for example Google Gemini), Home Assistant can look outside and tell the card what is really happening:
+
+1. Create an `input_select` helper **Sky Check** with the options `unknown`, `sunny`, `partlycloudy`, `cloudy`, `rainy`, `pouring`.
+2. Add an automation that asks the AI every 15 minutes in daylight:
+
+<details>
+<summary>Automation (YAML)</summary>
+
+```yaml
+alias: Sky Check from Outdoor Cameras
+triggers:
+  - trigger: time_pattern
+    minutes: /15
+    id: check
+  - trigger: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    below: 3
+    id: night
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: check
+          - condition: numeric_state
+            entity_id: sun.sun
+            attribute: elevation
+            above: 3
+        sequence:
+          - action: ai_task.generate_data
+            data:
+              entity_id: ai_task.google_ai_task
+              task_name: sky check
+              instructions: >-
+                Outdoor camera images taken just now. Judge the weather at this moment only from
+                what you see: sunlight and hard shadows mean sunny; some sun with patchy shadows
+                means partlycloudy; soft light without shadows means cloudy; falling rain, rain
+                streaks, splashes in puddles or drops on the lens mean rainy, heavy rain means
+                pouring. A wet ground alone does not mean it is raining now.
+              structure:
+                condition:
+                  required: true
+                  selector:
+                    select:
+                      options: [sunny, partlycloudy, cloudy, rainy, pouring]
+              attachments:
+                - media_content_id: media-source://camera/camera.garden
+                  media_content_type: image/jpeg
+            response_variable: sky
+            continue_on_error: true
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sky_check
+            data:
+              option: "{{ sky.data.condition if sky is defined and sky.data is defined else 'unknown' }}"
+      - conditions:
+          - condition: trigger
+            id: night
+        sequence:
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sky_check
+            data:
+              option: unknown
+mode: single
+```
+
+</details>
+
+3. Set `observed_condition: input_select.sky_check` on the card.
+
+Cameras that only stream (RTSP, go2rtc) can be added as a *Generic Camera* with a still image URL such as `http://<go2rtc-host>:1984/api/frame.jpeg?src=<stream>`.
 
 ### Photorealistic pack
 
