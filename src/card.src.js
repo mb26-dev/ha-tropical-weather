@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.5.0";
+const TWC_VERSION = "1.5.1";
 
 /*__I18N__*/
 let LANG = "en";
@@ -327,7 +327,9 @@ class TropicalWeatherCard extends HTMLElement {
     const n = num(st.attributes.cases_last_4_weeks);
     const exp = num(st.attributes.expected_last_4_weeks);
     const tip = n !== null && exp !== null ? ` title="${n} / ${exp}"` : "";
-    return `<span class="ts dgl" style="color:${col}"${tip}>${T("dengue", { l: T("dg_" + st.state), n: n ?? "–" })}</span>`;
+    const prov = (LANG === "th" && st.attributes.province_th) || st.attributes.province || "";
+    const text = T("dengue", { p: prov, l: T("dg_" + st.state), n: n ?? "–" }).replace(/ +([:：])/, "$1");
+    return `<span class="ts dgl" style="color:${col}"${tip}>${text}</span>`;
   }
 
   // probability used by the day insights: share of models expecting rain when several models are there
