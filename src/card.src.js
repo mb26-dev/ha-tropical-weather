@@ -327,7 +327,7 @@ class TropicalWeatherCard extends HTMLElement {
     const n = num(st.attributes.cases_last_4_weeks);
     const exp = num(st.attributes.expected_last_4_weeks);
     const tip = n !== null && exp !== null ? ` title="${n} / ${exp}"` : "";
-    return `<span class="ts dgl" style="color:${col}"${tip}><ha-icon icon="mdi:mosquito"></ha-icon>${T("dengue", { l: T("dg_" + st.state), n: n ?? "–" })}</span>`;
+    return `<span class="ts dgl" style="color:${col}"${tip}>${T("dengue", { l: T("dg_" + st.state), n: n ?? "–" })}</span>`;
   }
 
   // probability used by the day insights: share of models expecting rain when several models are there
@@ -1200,8 +1200,7 @@ TropicalWeatherCard.styles = `
   .hhum { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
   .hhum b { font-weight: 600; }
   .hhum .gold { font-size: 9px; }
-  .tile .dgl { display: flex; align-items: center; gap: 3px; margin-top: 2px; font-size: 11px; opacity: 1; }
-  .tile .dgl ha-icon { --mdc-icon-size: 13px; }
+  .tile .dgl { display: block; margin-top: 3px; font-size: 11px; opacity: 1; }
   .cond .odot { font-size: 10px; vertical-align: middle; }
   .temp .tdot { font-size: 9px; vertical-align: top; margin-left: 3px; opacity: 1; }
   .wg { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 4px; }
