@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.2.2";
+const TWC_VERSION = "1.2.3";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -1274,7 +1274,7 @@ class TropicalWeatherCard extends HTMLElement {
           <div class="sunbox">${sun.up ? "☀︎ ↓" : "☀︎ ↑"} ${this._fmtTime(new Date(sun.up ? sun.set : sun.rise))}<br><span>${dl}</span></div>
         </div>
         <div class="hbot">
-          <div class="temp">${temp !== null ? temp.toFixed(1) : "–"}<sup>°C</sup></div>
+          <div class="temp">${temp !== null ? temp.toFixed(1) : "–"}<sup>°C${locT !== null ? `<span class="gold tdot" title="${T("measured")}">●</span>` : ""}</sup></div>
           <div class="hmeta">
             <div>${T("feels_like")} <b style="color:${hl.c}">${hi !== null ? Math.round(hi) + "°" : "–"}</b> · ${hl.t}</div>
             ${hum !== null ? `<div class="hhum"><svg width="11" height="13" viewBox="0 0 24 28"><path d="M12 2C12 2 3 13 3 18.5a9 9 0 0 0 18 0C21 13 12 2 12 2z" fill="#4fc3f7"/></svg>${T("humidity")} <b>${Math.round(hum)} %</b>${locH !== null ? ` <span class="gold">●</span>` : ""}</div>` : ""}
@@ -1402,6 +1402,7 @@ TropicalWeatherCard.styles = `
   .hhum { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
   .hhum b { font-weight: 600; }
   .hhum .gold { font-size: 9px; }
+  .temp .tdot { font-size: 9px; vertical-align: top; margin-left: 3px; opacity: 1; }
   .wg { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 4px; }
   .wg svg { width: 100%; height: 54px; display: block; }
   .wgh { display: flex; justify-content: space-between; gap: 6px; font-size: 10.5px; opacity: .7; margin-bottom: 4px; white-space: nowrap; }
