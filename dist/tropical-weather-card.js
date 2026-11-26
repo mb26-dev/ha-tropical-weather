@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.2.0";
+const TWC_VERSION = "1.2.1";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -1410,6 +1410,24 @@ TropicalWeatherCard.styles = `
   .wl { color: #8a8a90; font-size: 12px; }
   .wp { color: #7fb3d5; font-size: 11px; min-height: 14px; }
   .wp.wet { color: #4fc3f7; font-weight: 500; }
+  /* phone: the hero is measured against the card width, so it also works in narrow dashboard columns */
+  ha-card { container-type: inline-size; container-name: twc; }
+  @container twc (max-width: 480px) {
+    .hero { height: 290px; }
+    .htop { left: 14px; right: 14px; top: 12px; gap: 8px; }
+    .hl { gap: 8px; min-width: 0; }
+    .hl .wxi { width: 48px; height: 48px; padding: 4px; }
+    .place { font-size: 11.5px; }
+    .cond { font-size: 17px; line-height: 1.2; }
+    .sunbox { font-size: 12px; flex: 0 0 auto; }
+    .sunbox span { font-size: 10.5px; }
+    .hbot { left: 14px; right: 14px; bottom: 24px; gap: 10px; }
+    .temp { font-size: 50px; letter-spacing: -1px; flex: 0 0 auto; }
+    .temp sup { font-size: 15px; }
+    .hmeta { font-size: 12px; line-height: 1.55; min-width: 0; }
+    .hmeta > div { white-space: nowrap; }
+    .rng i { width: 52px; }
+  }
   @container (max-width: 440px) {
     .week { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin: 12px 12px 0; }
     .wd:nth-child(n+7) { display: none; }
