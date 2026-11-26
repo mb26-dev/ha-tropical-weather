@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.1.2";
+const TWC_VERSION = "1.2.0";
 
 /*__I18N__*/
 let LANG = "en";
@@ -222,6 +222,7 @@ class TropicalWeatherCard extends HTMLElement {
       alert_areas: null,
       alert_min_severity: "minor",
       alert_max_age: 24,
+      rain_consensus: true,
     }, config);
     if (typeof this._config.alerts === "string") this._config.alerts = [this._config.alerts];
     if (typeof this._config.alert_areas === "string") this._config.alert_areas = [this._config.alert_areas];
@@ -234,7 +235,7 @@ class TropicalWeatherCard extends HTMLElement {
   set hass(hass) {
     const first = !this._hass;
     this._hass = hass;
-    if (first || this._subscribedTo !== this._activeWeather()) this._subscribe();
+    if (first || this._subscribedTo !== this._subKey()) this._subscribe();
     const c = this._config;
     const ids = [...c.sources, c.temperature, c.humidity, c.tide, c.sun, c.sea_temperature, c.pressure, c.pressure_trend, c.lightning_distance, c.lightning_counter, c.lightning_azimuth, c.cyclone, c.wind_gust, ...this._alertIds()].filter(Boolean);
     if (this._radarEl) this._radarEl.hass = hass;
@@ -257,16 +258,47 @@ class TropicalWeatherCard extends HTMLElement {
     for (const p of subs) { try { const u = await p; if (u) u(); } catch (e) { /* ignore */ } }
   }
 
+  _subKey() { return [this._activeWeather(), ...(this._config.rain_consensus !== false ? this._config.sources : [])].join("|"); }
+
   _subscribe() {
     if (!this._hass || !this._hass.connection) return;
     this._unsubscribe();
     const wid = this._activeWeather();
-    this._subscribedTo = wid;
-    this._hourly = null; this._daily = null;
-    const sub = (type, cb) => this._hass.connection.subscribeMessage((ev) => { cb(ev.forecast || []); this._render(); },
-      { type: "weather/subscribe_forecast", forecast_type: type, entity_id: wid });
-    this._subs.push(sub("hourly", (f) => { this._hourly = f; }).catch(() => null));
-    this._subs.push(sub("daily", (f) => { this._daily = f; }).catch(() => null));
+    this._subscribedTo = this._subKey();
+    this._hourly = null; this._daily = null; this._srcHourly = {};
+    const sub = (id, type, cb) => this._hass.connection.subscribeMessage((ev) => { cb(ev.forecast || []); this._render(); },
+      { type: "weather/subscribe_forecast", forecast_type: type, entity_id: id });
+    this._subs.push(sub(wid, "hourly", (f) => { this._hourly = f; }).catch(() => null));
+    this._subs.push(sub(wid, "daily", (f) => { this._daily = f; }).catch(() => null));
+    // hourly forecasts of the other sources: the rain outlook asks all models, not only the main one
+    if (this._config.rain_consensus !== false) {
+      for (const id of this._config.sources) {
+        if (id === wid || !this._hass.states[id]) continue;
+        this._subs.push(sub(id, "hourly", (f) => { this._srcHourly[id] = f; }).catch(() => null));
+      }
+    }
+  }
+
+  // rain votes of all models for the hour of a main-forecast entry: a model votes "rain" with a
+  // probability of 50 % or more, or - if it gives no probability (Met.no, TMD) - 0.3 mm or more
+  _rainVote(x) {
+    const t = Date.parse(x.datetime);
+    const wet = (e) => { const pp = num(e.precipitation_probability); return pp !== null ? pp >= 50 : (num(e.precipitation) || 0) >= 0.3; };
+    const entries = [x];
+    for (const list of Object.values(this._srcHourly || {})) {
+      const e = (list || []).find((y) => Math.abs(Date.parse(y.datetime) - t) < 1800000);
+      if (e) entries.push(e);
+    }
+    const votes = entries.filter(wet).length;
+    const mms = entries.map((e) => num(e.precipitation) || 0).sort((a, b) => a - b);
+    const mid = mms.length % 2 ? mms[(mms.length - 1) / 2] : (mms[mms.length / 2 - 1] + mms[mms.length / 2]) / 2;
+    return { votes, n: entries.length, frac: votes / entries.length, mm: mid, thunder: entries.some((e) => String(e.condition).startsWith("lightning")) };
+  }
+
+  // probability used by the day insights: share of models expecting rain when several models are there
+  _ppAt(x) {
+    const v = this._rainVote(x);
+    return v.n >= 2 ? Math.round(v.frac * 100) : (num(x.precipitation_probability) || 0);
   }
 
   // ---------- helpers ----------
@@ -375,7 +407,7 @@ class TropicalWeatherCard extends HTMLElement {
     const rows = h.map((x) => {
       const t = Date.parse(x.datetime), elev = sunElevation(t + 1800000, lat, lon);
       const g = irradiance(elev, num(x.cloud_coverage));
-      return { t, elev, g, pp: num(x.precipitation_probability) || 0, mm: num(x.precipitation) || 0, rh: num(x.humidity), app: num(x.apparent_temperature) ?? num(x.temperature),
+      return { t, elev, g, pp: this._ppAt(x), mm: num(x.precipitation) || 0, rh: num(x.humidity), app: num(x.apparent_temperature) ?? num(x.temperature),
         temp: num(x.temperature), wind: num(x.wind_speed) || 0, uv: num(x.uv_index), storm: String(x.condition).startsWith("lightning"),
         asph: asphaltTemp(num(x.temperature) ?? 28, g, num(x.wind_speed) || 0) };
     });
@@ -629,6 +661,28 @@ class TropicalWeatherCard extends HTMLElement {
     if (!hourly || !hourly.length) return { text: T("loading"), cls: "", icon: "cloudy" };
     const now = Date.now();
     const h = hourly.filter((x) => Date.parse(x.datetime) + 3600000 > now).slice(0, 24);
+    const votes = h.map((x) => this._rainVote(x));
+    if (this._config.rain_consensus !== false && votes.length && Math.max(...votes.map((v) => v.n)) >= 2) {
+      const at = (i) => this._fmtHour(new Date(Date.parse(h[i].datetime)));
+      const m = Math.max(...votes.map((v) => v.n));
+      const start = votes.slice(0, 12).findIndex((v) => v.frac >= 0.5);
+      if (start === -1) {
+        const poss = votes.slice(0, 12).findIndex((v) => v.votes >= 1);
+        if (poss === -1) return { text: T("no_rain", { p: Math.round(Math.max(...votes.slice(0, 12).map((v) => v.frac * 100))) }), cls: "ok", icon: "partlycloudy" };
+        const most = Math.max(...votes.slice(0, 12).map((v) => v.votes));
+        return { text: `${T("showers_possible", { t: at(poss) })} · ${T("models_agree", { n: most, m })}`, cls: "ok", icon: "partlycloudy" };
+      }
+      const end = votes.findIndex((v, i) => i > start && v.frac < 0.5);
+      const win = end === -1 ? votes.slice(start) : votes.slice(start, end);
+      const most = Math.max(...win.map((v) => v.votes));
+      const mm = win.reduce((a, v) => a + v.mm, 0);
+      const lead = start === 0 ? T("rain_now") : T("rain_from", { t: at(start) });
+      const t1 = end === -1 ? T("beyond_24h") : T("approx", { t: at(end) });
+      const maxRate = Math.max(...win.map((v) => v.mm));
+      const thunder = win.some((v) => v.thunder);
+      const ic = this._config.tropical_mode && maxRate >= 12 ? "tropical-monsoon" : (thunder ? "lightning-rainy" : (most / m >= 0.75 ? "pouring" : "rainy"));
+      return { text: `${lead} · ${T("until", { t: t1 })} · ${T("models_agree", { n: most, m })} · ${mm.toFixed(1)} mm`, cls: most / m >= 0.75 ? "warn" : "info", icon: ic };
+    }
     const p = h.map((x) => num(x.precipitation_probability) || 0);
     const start = p.slice(0, 12).findIndex((v) => v >= 50);
     if (start === -1) {

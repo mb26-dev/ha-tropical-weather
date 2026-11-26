@@ -154,6 +154,7 @@ radar_card:
 | `lightning_alert_km` | `15` | Distance for the lightning alert. |
 | `cyclone` | – | Sensor whose state is the storm name and with a `distance_km` (or `distance`) attribute. |
 | `cyclone_alert_km` | `400` | Distance at which a cyclone takes over the sky scene. |
+| `rain_consensus` | `true` | The rain outlook, laundry and best-time tiles ask every weather entity in `sources`, not only the main one. A model counts as "rain" with a probability of 50 % or more, or with 0.3 mm or more when it gives no probability. The outlook shows how many models agree. |
 | `alerts` | – | Warning entities for the banner. `auto` adds every CAP alert sensor (an entity with `severity` and `geocodes` or `identifier`). Also accepts event entities (feedreader), Meteoalarm and plain sensors whose state is the warning. |
 | `alert_areas` | – | Only show warnings whose `geocodes` or area description contain one of these codes or names (e.g. `TH-81`, `Krabi`). Warnings without area information are always shown. |
 | `alert_min_severity` | `minor` | Lowest severity shown: `minor`, `moderate`, `severe` or `extreme`. Warnings without a severity count as `minor`. |
