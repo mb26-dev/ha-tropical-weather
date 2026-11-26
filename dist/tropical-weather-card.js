@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.2.3";
+const TWC_VERSION = "1.2.4";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -686,11 +686,11 @@ class TropicalWeatherCard extends HTMLElement {
     let day = rows.filter((r) => r.t + 3600000 > Date.now());
     let prefix = "";
     if (!day.length || !isDay(day[0])) { const nx = day.findIndex(isDay); day = nx >= 0 ? day.slice(nx) : []; if (nx > 0 && day.length && this._localHour(day[0].t) < 12 && new Date(day[0].t).getDate() !== new Date().getDate()) prefix = T("tomorrow") + " · "; }
-    // the current hour uses your own humidity sensor when there is one; rain = most models expect it
+    // the current hour uses your own humidity sensor when there is one; rain = more than half of the models expect it (a tie is not rain)
     const rhNow = this._num(this._config.humidity) ?? num(a.humidity);
     const rhOf = (r, i) => (i === 0 && rhNow !== null && r.t <= Date.now() ? rhNow : (r.rh ?? 80));
     let n = 0;
-    while (n < day.length && isDay(day[n]) && day[n].pp < 50 && rhOf(day[n], n) < 92) n++;
+    while (n < day.length && isDay(day[n]) && day[n].pp <= 50 && rhOf(day[n], n) < 92) n++;
     const dayLen = day.findIndex((r) => !isDay(r));
     // drying time: about 1.5 h in sun below 65 % humidity, 2.5 h below 80 %, otherwise 4 h
     const rhRef = n ? rhOf(day[0], 0) : 99;
@@ -702,6 +702,7 @@ class TropicalWeatherCard extends HTMLElement {
     if (n && avail >= need && (dayLen === -1 ? n === day.length : n >= dayLen)) { lSub = prefix + T("dries_all_day"); lCol = "#4caf50"; }
     else if (n && avail >= need) { lSub = prefix + T("dries_until", { t: this._fmtTime(new Date(until)) }); lCol = "#ffc107"; }
     else if (n && avail >= 0.5) { lSub = prefix + T("dries_until", { t: this._fmtTime(new Date(until)) }); lCol = "#ff9800"; lMark = "≈"; }
+    else if (n && n < day.length) { lSub = prefix + T("rain_from", { t: this._fmtTime(new Date(until)) }); lCol = "#ff9800"; lMark = "≈"; }
     else { lSub = prefix + T("laundry_bad"); lCol = "#f44336"; lMark = "✗"; }
     tiles.push(`<div class="tile ins"><span class="tl"><ha-icon icon="mdi:tshirt-crew-outline"></ha-icon>${T("laundry")}</span><b class="sm" style="color:${lCol}">${lMark}</b><span class="ts">${lSub}</span></div>`);
 
