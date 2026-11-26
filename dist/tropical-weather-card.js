@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.1.1";
+const TWC_VERSION = "1.1.2";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -911,18 +911,24 @@ class TropicalWeatherCard extends HTMLElement {
       const pad = Math.max(spread * 0.15, tolerance[m.k] * 0.5);
       const a = lo - pad, b = hi + pad;
       const pos = (v) => ((v - a) / (b - a)) * 100;
-      // labels of neighbouring dots closer than ~13 % alternate above the line so they never overlap
+      // labels are placed in three lanes (below, above, lower) so that close values never overlap;
+      // the gold local label always takes the lane above the line
       const sorted = vals.map((x) => ({ ...x, p: pos(x.v) })).sort((x, y) => x.p - y.p);
-      // the local (gold) label always sits above the line, so a source next to it stays below
       const locP = local[m.k] != null ? pos(local[m.k]) : null;
-      let lastBelow = -99;
-      sorted.forEach((x) => { x.up = x.p - lastBelow < 13 && (locP === null || Math.abs(x.p - locP) >= 13); if (!x.up) lastBelow = x.p; });
-      const dots = sorted.map((x) => `<span class="dot${x.up ? " up" : ""}" style="left:${x.p}%" title="${x.n}: ${x.v.toFixed(m.dec)}${m.unit}"><i>${x.n}</i></span>`).join("")
+      const GAP = 17;
+      const lanes = { below: [], up: locP === null ? [] : [locP], low: [] };
+      const free = (lane, p) => lanes[lane].every((q) => Math.abs(q - p) >= GAP);
+      sorted.forEach((x) => {
+        x.lane = ["below", "up", "low"].find((l) => free(l, x.p)) || "low";
+        lanes[x.lane].push(x.p);
+      });
+      const deep = sorted.some((x) => x.lane === "low");
+      const dots = sorted.map((x) => `<span class="dot${x.lane === "below" ? "" : " " + x.lane}" style="left:${x.p}%" title="${x.n}: ${x.v.toFixed(m.dec)}${m.unit}"><i>${x.n}</i></span>`).join("")
         + (local[m.k] != null ? `<span class="dot loc" style="left:${pos(local[m.k])}%" title="${T("measured")}: ${local[m.k].toFixed(m.dec)}${m.unit}"><i>${T("local")}</i></span>` : "");
       const shown = local[m.k] != null ? local[m.k] : med;
       return `<div class="cons">
         <div class="ch"><span>${m.label}</span><b>${shown.toFixed(m.dec)}${m.unit}</b><em class="${agree ? "ag" : "dg"}">${agree ? T("agree") : "± " + (spread / 2).toFixed(m.dec)}</em></div>
-        <div class="track"><div class="span" style="left:${pos(lo)}%;width:${pos(hi) - pos(lo)}%"></div>${dots}</div>
+        <div class="track${deep ? " deep" : ""}"><div class="span" style="left:${pos(lo)}%;width:${pos(hi) - pos(lo)}%"></div>${dots}</div>
       </div>`;
     }).filter(Boolean).join("");
   }
@@ -1383,6 +1389,8 @@ TropicalWeatherCard.styles = `
   .dot.loc { background: var(--gold); box-shadow: 0 0 6px rgba(212,175,55,.8); }
   .dot.loc i { color: var(--gold); opacity: 1; top: -13px; }
   .dot.up i { top: -13px; }
+  .dot.low i { top: 23px; }
+  .track.deep { height: 38px; }
   .note { font-size: 11.5px; opacity: .55; margin-top: 12px; }
   .empty { padding: 24px 0; text-align: center; opacity: .6; font-size: 13px; }
   @media (prefers-reduced-motion: reduce) { .alert, .tile.hot { animation: none; } }
