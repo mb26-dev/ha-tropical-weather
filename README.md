@@ -56,7 +56,7 @@ Most weather cards are made for four seasons. In the tropics the questions are d
 - **Asphalt / paws** – estimated road surface temperature from air temperature, solar radiation and wind. Red above 52 °C (paw burns within a minute) with the time it is safe to walk again.
 - **Best time outside** – the dry, cooler windows of the next hours, from dawn on, without thunderstorms.
 - **Laundry** – does it dry outside today, until when, or not at all.
-- **Mosquitoes** – Aedes (dengue) risk from temperature, humidity and recent and coming rain, with the peak biting times. Optionally the real dengue situation in your province from Thailand's national disease surveillance ([Dengue Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch)).
+- **Mosquitoes** – Aedes (dengue) risk from temperature, humidity and recent and coming rain, with the peak biting times. Optionally the real dengue situation in your province from Thailand's national disease surveillance ([Mosquito Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch)).
 
 **Official warnings**
 - **Warning banner** – shows the warnings of your national weather service on top of the card, coloured by severity (advisory, moderate, severe, extreme), with validity, instructions and a link to the bulletin. Works with CAP alert sensors (e.g. the [CAP Alerts](https://github.com/seevee/cap_alerts) integration with its WMO source, which includes TMD and many other national weather services), Meteoalarm, feedreader events and any sensor with a warning text. Filter it to your province or region with `alert_areas`.
