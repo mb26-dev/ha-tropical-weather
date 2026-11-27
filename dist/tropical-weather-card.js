@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.5.3";
+const TWC_VERSION = "1.5.4";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -492,7 +492,6 @@ class TropicalWeatherCard extends HTMLElement {
       rain_consensus: true,
       observed_condition: null,
       dengue: null,
-      observed_max_age: 45,
     }, config);
     if (typeof this._config.alerts === "string") this._config.alerts = [this._config.alerts];
     if (typeof this._config.alert_areas === "string") this._config.alert_areas = [this._config.alert_areas];
@@ -553,16 +552,25 @@ class TropicalWeatherCard extends HTMLElement {
   }
 
   // observed weather right now (e.g. a camera check written into an input_select / sensor with
-  // weather condition states); null when not set, unknown or older than observed_max_age minutes
+  // weather condition states); null when not set, unknown or (with a timestamp or observed_max_age) too old
   _observed() {
     const id = this._config.observed_condition;
     const st = id && this._state(id);
     if (!st) return null;
     const cond = String(st.state);
     if (!["sunny", "clear-night", "partlycloudy", "cloudy", "fog", "windy", "rainy", "pouring", "lightning", "lightning-rainy", "snowy", "hail"].includes(cond)) return null;
-    const seen = Date.parse(st.last_reported || st.last_updated || st.last_changed);
-    const maxAge = (num(this._config.observed_max_age) ?? 45) * 60000;
-    if (!Number.isFinite(seen) || Date.now() - seen > maxAge) return null;
+    // The browser only gets last_changed/last_updated, and a source that keeps reporting the same
+    // value (e.g. "sunny" all morning) never updates them - so they say nothing about freshness.
+    // An age limit is applied only when the source carries its own timestamp attribute or when
+    // observed_max_age is set explicitly; otherwise the source must switch to unknown when it stops.
+    const a = st.attributes || {};
+    const stamp = a.checked_at || a.last_check || a.observed_at || a.timestamp;
+    const explicit = num(this._config.observed_max_age);
+    if (stamp || explicit != null) {
+      const seen = Date.parse(stamp || st.last_updated || st.last_changed);
+      const maxAge = (explicit ?? 45) * 60000;
+      if (!Number.isFinite(seen) || Date.now() - seen > maxAge) return null;
+    }
     return { cond, wet: ["rainy", "pouring", "lightning-rainy", "hail"].includes(cond) };
   }
 
