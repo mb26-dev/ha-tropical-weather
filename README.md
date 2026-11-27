@@ -6,7 +6,7 @@
 Monsoon downpours · heat stress · thunderstorms · cyclones · tides · and what the weather means for your day</p>
 
 <p align="center">
-  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Default-41BDF5.svg" alt="HACS Default"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.1%2B-03a9f4" alt="Home Assistant 2024.1+">
   <a href="https://github.com/mb26-dev/ha-tropical-weather/releases"><img src=".github/badge-release.svg" alt="Release v1.5.3"></a>
   <img src="https://img.shields.io/badge/languages-19-d4af37" alt="19 languages">
