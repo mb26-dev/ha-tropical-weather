@@ -8,7 +8,7 @@ Monsoon downpours · heat stress · thunderstorms · cyclones · tides · and wh
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Default-41BDF5.svg" alt="HACS Default"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.1%2B-03a9f4" alt="Home Assistant 2024.1+">
-  <a href="https://github.com/mb26-dev/ha-tropical-weather/releases"><img src=".github/badge-release.svg" alt="Release v1.5.4"></a>
+  <a href="https://github.com/mb26-dev/ha-tropical-weather/releases"><img src=".github/badge-release.svg" alt="Release v1.5.5"></a>
   <img src="https://img.shields.io/badge/languages-19-d4af37" alt="19 languages">
   <a href="https://ko-fi.com/mb26dev"><img src="https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?logo=ko-fi&logoColor=white" alt="Buy me a coffee on Ko-fi"></a>
 </p>
@@ -56,7 +56,7 @@ Most weather cards are made for four seasons. In the tropics the questions are d
 - **Asphalt / paws** – estimated road surface temperature from air temperature, solar radiation and wind. Red above 52 °C (paw burns within a minute) with the time it is safe to walk again.
 - **Best time outside** – the dry, cooler windows of the next hours, from dawn on, without thunderstorms.
 - **Laundry** – does it dry outside today, until when, or not at all.
-- **Mosquitoes** – Aedes (dengue) risk from temperature, humidity and recent and coming rain, with the peak biting times. Optionally the real dengue situation in your province from Thailand's national disease surveillance ([Mosquito Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch)).
+- **Mosquitoes** – Aedes (dengue) biting risk for the current hour: breeding conditions from temperature, humidity and rain, combined with the time of day (peaks after sunrise and before sunset), heat, wind and rain. Shows the next peak biting window. Optionally the real dengue situation in your province from Thailand's national disease surveillance ([Mosquito Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch)).
 
 **Official warnings**
 - **Warning banner** – shows the warnings of your national weather service on top of the card, coloured by severity (advisory, moderate, severe, extreme), with validity, instructions and a link to the bulletin. Works with CAP alert sensors (e.g. the [CAP Alerts](https://github.com/seevee/cap_alerts) integration with its WMO source, which includes TMD and many other national weather services), Meteoalarm, feedreader events and any sensor with a warning text. Filter it to your province or region with `alert_areas`.
@@ -270,7 +270,7 @@ Codes: `en de th vi id ms fil km lo my zh-Hans zh-Hant ja ko hi bn ne si ta`. Co
 - **Storm approach**: a linear fit of the strike distances of the last 40 minutes. At least three strikes over six minutes are needed.
 - **Laundry**: daylight hours (sun above 12°) without rain and below 92 % humidity. The current hour uses your own `humidity` sensor. Drying time depends on humidity: about 1.5 h below 65 %, 2.5 h below 80 %, otherwise 4 h. ✓ = enough time, ≈ = short window or rain close, ✗ = raining, dark or too humid.
 - **Dengue** (with the `dengue` option): reported cases of the last 4 weeks against the 5-year median of the same weeks, from the Report 506 surveillance of the Department of Disease Control.
-- **Mosquito risk**: a simple index of mean temperature (26–32 °C is ideal for Aedes), humidity and rain in the next two days. It shows conditions, not actual mosquito counts.
+- **Mosquito risk**: breeding pressure from mean temperature (26–32 °C is ideal for Aedes), humidity and rain in the next two days, multiplied by Aedes biting activity for the current hour. Activity is highest from sunrise until the sun is about 30° high and again from 30° down to sunset, moderate in full daylight and low at night; above 33 °C, from 15 km/h wind or in rain of 2 mm/h or more it is reduced. Aedes is the day-biting dengue mosquito, so *Low* at night does not mean no mosquitoes at all. It shows conditions, not actual mosquito counts.
 
 ## Development
 

@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.5.4";
+const TWC_VERSION = "1.5.5";
 
 // ---------- Translations ----------
 // Compact source: every language lists its strings in the order of the *_KEYS arrays below.
@@ -298,6 +298,19 @@ function irradiance(elev, cloudPct) {
 }
 // sun-heated asphalt surface: rises with irradiance, cooled by wind
 function asphaltTemp(air, g, wind) { return air + (0.033 * g) / (1 + (wind || 0) / 30); }
+// Aedes biting activity 0..1 from sun elevation (deg) and, when given, the hour's weather.
+// Peak (1.0) from sunrise to about 30 deg in the morning and from 30 deg down to sunset in the
+// afternoon, moderate in full daylight (they bite in shade and indoors), low at night.
+function mosquitoActivity(elev, rising, r) {
+  let a = elev > 30 ? 0.45 : elev >= 0 ? 1 : elev >= -6 ? (rising ? 0.4 : 0.6) : 0.1;
+  if (r) {
+    if (r.temp != null && r.temp > 33) a *= 0.75;
+    if (r.temp != null && r.temp < 20) a *= 0.4;
+    if ((r.wind || 0) >= 15) a *= 0.6;
+    if ((r.mm || 0) >= 2) a *= 0.4;
+  }
+  return a;
+}
 
 function num(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
 function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]); }
@@ -784,26 +797,39 @@ class TropicalWeatherCard extends HTMLElement {
     else { lSub = prefix + T("laundry_bad"); lCol = "#f44336"; lMark = "✗"; }
     tiles.push(`<div class="tile ins"><span class="tl">${T("laundry")}</span><img class="tic" src="${TILE_ICONS.laundry}" alt=""><b class="sm" style="color:${lCol}">${lMark}</b><span class="ts">${lSub}</span></div>`);
 
-    // 4) mosquitoes (Aedes): warm 26-32 deg, humid, recent / coming rain = breeding water
+    // 4) mosquitoes (Aedes). Two parts:
+    //    breeding pressure (how many there are): warm 26-32 deg, humid, recent / coming rain = breeding water
+    //    biting activity (whether they bite right now): Aedes are day biters with peaks in the hours after
+    //    sunrise and before sunset, little activity at night; heat, wind and rain keep them grounded.
+    //    The tile shows pressure x activity, so it follows the day instead of staying "high" for 24 h.
     const nx24 = rows.slice(0, 24);
     const tm = nx24.reduce((s2, r) => s2 + (r.temp ?? 28), 0) / nx24.length, rh = nx24.reduce((s2, r) => s2 + (r.rh ?? 75), 0) / nx24.length;
     const rain48 = rows.reduce((s2, r) => s2 + r.mm, 0) + (num((this._daily || [])[0]?.precipitation) || 0);
     let sc = tm >= 26 && tm <= 32 ? 2 : tm >= 22 && tm <= 35 ? 1 : 0;
     sc += rh >= 70 ? 1 : 0; sc += rain48 >= 20 ? 2 : rain48 >= 5 ? 1 : 0;
-    const ml = sc >= 4 ? ["uv.high", "#f44336"] : sc >= 2 ? ["uv.moderate", "#ffc107"] : ["uv.low", "#4caf50"];
-    tiles.push(`<div class="tile ins"><span class="tl">${T("mosquitoes")}</span><img class="tic" src="${TILE_ICONS.mosq}" alt=""><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText() : "&nbsp;"}</span>${this._dengueLine()}</div>`);
+    const now = Date.now();
+    const cur = rows.find((r) => r.t <= now && now < r.t + 3600000) || rows[0];
+    const eNow = sunElevation(now, lat, lon);
+    const actNow = mosquitoActivity(eNow, sunElevation(now + 1800000, lat, lon) > eNow, cur);
+    const risk = (sc / 5) * actNow;
+    const ml = risk >= 0.6 ? ["uv.high", "#f44336"] : risk >= 0.3 ? ["uv.moderate", "#ffc107"] : ["uv.low", "#4caf50"];
+    tiles.push(`<div class="tile ins"><span class="tl">${T("mosquitoes")}</span><img class="tic" src="${TILE_ICONS.mosq}" alt=""><b class="sm" style="color:${ml[1]}">${T(ml[0])}</b><span class="ts">${sc >= 2 ? this._biteText(rows, actNow) : "&nbsp;"}</span>${this._dengueLine()}</div>`);
 
     return `<div class="tiles ins-row">${tiles.join("")}</div>`;
   }
 
-  // Aedes biting peaks: early morning and late afternoon (local time)
-  _biteText() {
-    const lh = this._localHour(Date.now());
-    const P = [[6, 8], [16, 18]];
-    if (P.some(([a, b]) => lh >= a && lh < b)) return T("bites_now");
-    const nx = P.find(([a]) => lh < a);
-    const f = ([a, b]) => `${String(a).padStart(2, "0")}–${String(b).padStart(2, "0")}`;
-    return T("next_peak", { t: trusted(nx ? f(nx) : `${T("tomorrow")} ${f(P[0])}`) });
+  // Aedes biting peaks from the forecast hours: the sun-based peak window now, or the next one
+  _biteText(rows, actNow) {
+    if (actNow >= 0.9) return T("bites_now");
+    const now = Date.now(), { lat, lon } = this._geo();
+    const act = rows.map((r) => mosquitoActivity(r.elev, sunElevation(r.t + 3600000, lat, lon) > r.elev, null));
+    const i = rows.findIndex((r, k) => r.t > now && act[k] >= 0.9);
+    if (i < 0) return "&nbsp;";
+    let j = i;
+    while (j + 1 < rows.length && act[j + 1] >= 0.9) j++;
+    const ymd = (t) => new Intl.DateTimeFormat("en-CA", { timeZone: this._tz() }).format(new Date(t));
+    const day = ymd(rows[i].t) !== ymd(now) ? `${T("tomorrow")} ` : "";
+    return T("next_peak", { t: trusted(`${day}${this._hh(rows[i].t)}–${this._hh(rows[j].t + 3600000)}`) });
   }
 
   _lightning() {
