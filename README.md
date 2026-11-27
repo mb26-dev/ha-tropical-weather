@@ -8,7 +8,7 @@ Monsoon downpours · heat stress · thunderstorms · cyclones · tides · and wh
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.1%2B-03a9f4" alt="Home Assistant 2024.1+">
-  <img src="https://img.shields.io/github/v/release/mb26-dev/ha-tropical-weather?include_prereleases" alt="Release">
+  <a href="https://github.com/mb26-dev/ha-tropical-weather/releases"><img src="https://img.shields.io/github/v/release/mb26-dev/ha-tropical-weather?label=release&color=d4af37" alt="Release"></a>
   <img src="https://img.shields.io/badge/languages-19-d4af37" alt="19 languages">
   <a href="https://ko-fi.com/mb26dev"><img src="https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?logo=ko-fi&logoColor=white" alt="Buy me a coffee on Ko-fi"></a>
 </p>
@@ -127,7 +127,7 @@ lightning_counter: sensor.home_lightning_counter
 lightning_azimuth: sensor.home_lightning_azimuth
 cyclone: sensor.nearest_tropical_cyclone
 observed_condition: input_select.sky_check   # what a camera sees right now
-dengue: sensor.dengue_krabi_level            # Dengue Watch Thailand
+dengue: sensor.dengue_krabi_level            # Mosquito Watch Thailand
 alerts:                       # official warnings banner
   - auto                      # every CAP alert sensor
   - event.latest_alerts_from_thai_meteorological_department_tmd
@@ -159,7 +159,7 @@ radar_card:
 | `rain_consensus` | `true` | The rain outlook, laundry and best-time tiles ask every weather entity in `sources`, not only the main one. A model counts as "rain" with a probability of 50 % or more, or with 0.3 mm or more when it gives no probability. The outlook shows how many models agree; the laundry tile only counts an hour as wet when more than half of the models agree. |
 | `observed_condition` | – | An entity whose state is a weather condition seen right now (`sunny`, `partlycloudy`, `cloudy`, `rainy`, `pouring`, ...), for example an `input_select` filled from your outdoor cameras. For the current hour it overrules every model: hero condition (gold ● marker), rain outlook, laundry and best time. `unknown` or an old value is ignored. See [Observed weather from cameras](#observed-weather-from-cameras). |
 | `observed_max_age` | `45` | Minutes after which `observed_condition` counts as outdated. |
-| `dengue` | – | Level sensor of [Dengue Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch). The mosquito tile then also shows the dengue situation in your province: *below normal*, *normal*, *elevated* or *high*, with the cases of the last 4 weeks. |
+| `dengue` | – | Dengue level sensor of [Mosquito Watch Thailand](https://github.com/mb26-dev/ha-dengue-watch). The mosquito tile then also shows the dengue situation in your province: *below normal*, *normal*, *elevated* or *high*, with the cases of the last 4 weeks. |
 | `alerts` | – | Warning entities for the banner. `auto` adds every CAP alert sensor (an entity with `severity` and `geocodes` or `identifier`). Also accepts event entities (feedreader), Meteoalarm and plain sensors whose state is the warning. |
 | `alert_areas` | – | Only show warnings whose `geocodes` or area description contain one of these codes or names (e.g. `TH-81`, `Krabi`). Warnings without area information are always shown. |
 | `alert_min_severity` | `minor` | Lowest severity shown: `minor`, `moderate`, `severe` or `extreme`. Warnings without a severity count as `minor`. |
