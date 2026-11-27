@@ -4,7 +4,7 @@
  * A weather card built for the tropics: monsoon, heat, cyclones, thunderstorms,
  * tides and what the weather means for your day. MIT License.
  */
-const TWC_VERSION = "1.5.5";
+const TWC_VERSION = "1.5.6";
 
 /*__I18N__*/
 let LANG = "en";
@@ -759,6 +759,12 @@ class TropicalWeatherCard extends HTMLElement {
     if (!s || !Array.isArray(s.attributes.predictions)) return null;
     const p = s.attributes.predictions.map((x) => ({ t: Date.parse(x.time), h: num(x.height), type: x.type })).filter((x) => x.h !== null).sort((a, b) => a.t - b.t);
     const now = Date.now();
+    // Sources often start their list at the next extreme (or at midnight UTC), so there may be no
+    // extreme before "now". Mirror the first known half cycle backwards: the tide before the first
+    // listed one has the type and height of the second, half a cycle earlier.
+    if (p.length >= 2 && p[0].t > now && p[0].type !== p[1].type) {
+      p.unshift({ t: p[0].t - (p[1].t - p[0].t), h: p[1].h, type: p[1].type, est: true });
+    }
     const i = p.findIndex((x) => x.t > now);
     if (i <= 0) return null;
     const heightAt = (t) => {
